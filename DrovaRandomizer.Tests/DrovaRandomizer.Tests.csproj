@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>annotations</Nullable>
+		<IsPackable>false</IsPackable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+		<PackageReference Include="xunit" Version="2.9.2" />
+		<PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+	</ItemGroup>
+
+	<!-- The generator and its data tables are plain C#, linked in so the tests run without the game. -->
+	<ItemGroup>
+		<Compile Include="..\DrovaRandomizer\Systems\Generation\*.cs" LinkBase="Generation" />
+		<Compile Include="..\DrovaRandomizer\Data\ItemTable*.cs;..\DrovaRandomizer\Data\LocationTable*.cs;..\DrovaRandomizer\Data\TeleporterTable*.cs;..\DrovaRandomizer\Data\RuneTable.g.cs;..\DrovaRandomizer\Data\FloorClueTable*.cs;..\DrovaRandomizer\Data\AlrauneSpots.g.cs;..\DrovaRandomizer\Data\MonsterTable.g.cs;..\DrovaRandomizer\Data\TalentTable.g.cs" LinkBase="Data" />
+	</ItemGroup>
+</Project>

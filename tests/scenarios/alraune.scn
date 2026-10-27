@@ -1,0 +1,30 @@
+# Mandragora plants move to the run's spots: found there, gone from the vanilla spot, and still give Mandragora.
+launch A
+A wait ready=1 timeout=240
+A wait saves=separate
+A load 5 0
+A wait world=1 timeout=240
+A run invincibility
+A expect rando_alraunes contains "8ed95097-c8f3-42c7-bb43-d91e3e0347d1@6223,-477"
+A run rando_start 4242 default mandragora_placement=1
+A expect state contains "rando=4242" timeout=10
+# Spoiler of seed 4242 + mandragora_placement=1: plant 8ed95097 (vanilla 6223,-477) now stands at 3345,-8262.
+A expect rando_alraunes contains "8ed95097-c8f3-42c7-bb43-d91e3e0347d1@3345,-8262"
+A tp 6180,-477
+sleep 5
+A expect interactables Alraune 600 == none
+A tp 3320,-8262
+sleep 5
+A expect interactables Alraune 400 contains "Interact_Alraune" timeout=15
+A expect use Interact_Alraune 300 contains used timeout=15
+sleep 6
+A expect talk Alraune DT_Main_Alraune contains talking timeout=20
+A skip first
+A expect dialogue contains "in=0" timeout=60
+A expect inventory alraune contains "item_alraune:1" timeout=10
+
+A save 62
+sleep 3
+A load 5 62
+A wait world=1 timeout=240
+A expect rando_alraunes contains "8ed95097-c8f3-42c7-bb43-d91e3e0347d1@3345,-8262" timeout=10

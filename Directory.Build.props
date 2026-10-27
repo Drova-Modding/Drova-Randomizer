@@ -1,0 +1,7 @@
+<Project>
+  <PropertyGroup>
+    <!-- Path to the Drova install (the folder with Drova.exe). Override it with a GamePath environment
+         variable or -p:GamePath="..." instead of editing this file. -->
+    <GamePath Condition="'$(GamePath)' == ''">C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin</GamePath>
+  </PropertyGroup>
+</Project>

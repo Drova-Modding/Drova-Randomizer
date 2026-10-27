@@ -1,0 +1,58 @@
+# Talents: teacher shuffle swaps talents between teachers (Eugen keeps a full list, the tooltip's
+# "taught by" follows), starting talents arrive with their prerequisites, talents as items leave teachers
+# alone, and with random learning every teacher offers a "Random talent" entry at the median cost of its list,
+# in the real learn window too.
+launch A
+A wait ready=1 timeout=240
+A wait saves=separate
+A load 5 0
+A wait world=1 timeout=240
+A expect rando_learned == ""
+A expect rando_teach TeacherConfig_Eugen == Talent_Axe_03,Talent_Axe_MightySwing,Talent_Axe_FinalGrace
+A expect rando_taughtby Talent_Sword_Accuracy == EntityInfo_NPC_Amella,EntityInfo_NPC_Angus,EntityInfo_NPC_Kilian
+
+# Spoiler of seed 4242: Axe_03 -> Sword_Accuracy, MightySwing -> Spear_02, FinalGrace -> Shield_02.
+A run rando_start 4242 default teacher_shuffle=1
+A expect state contains "rando=4242" timeout=10
+A expect rando_teach TeacherConfig_Eugen == Talent_Sword_Accuracy,Talent_Spear_02,Talent_Shield_02
+A expect rando_taughtby Talent_Sword_Accuracy == EntityInfo_NPC_Eugen,EntityInfo_NPC_Henik,EntityInfo_NPC_Zoltan
+
+# Starting talents Sword_03 and Axe_BattleFrenzy, with their prerequisites.
+A load 5 0
+A wait world=1 timeout=240
+A run rando_start 4242 default starting_talents=2 talent_items=1 random_learning=1
+A expect rando_learned == Talent_Axe_01,Talent_Axe_02,Talent_Axe_03,Talent_Axe_BattleFrenzy,Talent_Sword_01,Talent_Sword_02,Talent_Sword_03 timeout=10
+# Eugen's list (costs 3) plus the entry at 3. The window's OK path: the entry teaches Alchemy (seeded), charges
+# 3 and marks only real talents as known; a normal entry teaches exactly what it says.
+A expect rando_teach TeacherConfig_Eugen == Talent_Axe_MightySwing,Talent_Axe_FinalGrace,Rando_RandomTalent_3
+A expect rando_window TeacherConfig_Eugen random == "cost 3, 0 LP left"
+A expect rando_learned == Talent_Alchemy,Talent_Axe_01,Talent_Axe_02,Talent_Axe_03,Talent_Axe_BattleFrenzy,Talent_Sword_01,Talent_Sword_02,Talent_Sword_03
+A expect rando_known == Talent_Alchemy,Talent_Axe_01,Talent_Axe_02,Talent_Axe_03,Talent_Axe_BattleFrenzy,Talent_Crafting_01,Talent_Crafting_02,Talent_Lockpicking,Talent_Shield_01,Talent_Sword_01,Talent_Sword_02,Talent_Sword_03
+A expect rando_window TeacherConfig_Eugen Talent_Axe_MightySwing == "cost 3, 0 LP left"
+A expect rando_learned == Talent_Alchemy,Talent_Axe_01,Talent_Axe_02,Talent_Axe_03,Talent_Axe_BattleFrenzy,Talent_Axe_MightySwing,Talent_Sword_01,Talent_Sword_02,Talent_Sword_03
+A expect rando_teach TeacherConfig_Eugen == Talent_Axe_FinalGrace,Rando_RandomTalent_3
+
+# The real learn window: Ada offers four talents, so the "?" Random talent entry is the fifth button and the
+# row and frame widen for it. Clicking it and then Learn teaches a random talent and charges its 3 points.
+A expect rando_openlearn TeacherConfig_Ada 20 == Talent_Spear_01,Talent_Spear_Agility,Talent_Sling_01,Talent_Sling_Concussion,Rando_RandomTalent_3
+A expect rando_clicklearn 4 == "17 LP left"
+A rando_hooks TalentActorModule
+
+# The real teacher dialogue: Dylan's answer opens the learn window through DS_Teach_OpenGUI, which reads
+# TeacherConfig.GetLearnableTalents and fills GUI_LearnWindow.SetLearnableTalents.
+set dylan 29b51cfa-3afb-4150-9a13-b143b7237ce0
+A bye
+A tp -1779,-1540
+sleep 4
+A tpnear $dylan 30 0
+A talk $dylan
+A skip
+A expect dialogue contains "choices=0:What are you doing here?" timeout=30
+A choose 1
+A skip
+A expect dialogue contains "choices=0:Can you show me how I can fight better" timeout=30
+A choose 0
+A skip
+A expect dialogue contains "DS_Teach_OpenGUI" timeout=30
+A expect rando_hooks TeacherConfig.GetLearnableTalents !contains "=0"
+A expect rando_hooks GUI_LearnWindow.SetLearnableTalents !contains "=0"

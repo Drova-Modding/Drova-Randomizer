@@ -1,0 +1,87 @@
+# Co-op where host and client both have a run with other seeds and options. The client plays the host's run
+# while joined: same options, same placements, same shelves. With shared loot a shop slot one player buys is
+# gone for both. Leaving gives the client its own run back. Needs the co-op mod (DrovaCoopMod) installed.
+set olaf 52b3d368-a4c0-4a62-9542-1f597c3e669b
+set spawner abc99d05-d962-499b-9597-deee6f6a0b04
+set bowslot 52b3d368-a4c0-4a62-9542-1f597c3e669b:2e81ff029d4eb624daadff4be33cdbb1
+
+launch A
+launch B
+A wait ready=1 timeout=240
+B wait ready=1 timeout=240
+A wait saves=separate timeout=1
+B wait saves=separate timeout=1
+A load 5 0
+B load 5 0
+A wait world=1 timeout=240
+B wait world=1 timeout=240
+A run invincibility
+B run invincibility
+
+# The client's own run: another seed, shops and cave entrances instead of monsters.
+B run rando_start 777 default traders=1 teleporters=1
+B expect state contains "rando=777 checked=0" timeout=30
+B expect state contains "options=ffd0a6"
+B expect rando_placed $bowslot == weapon_axe_jawboneAxe
+# The co-op reload loads the newest save, so this one carries the client's run.
+B save 67
+sleep 3
+
+A run rando_start 4242 default traders=1 monster_shuffle=1
+A expect state contains "rando=4242 checked=0" timeout=30
+A expect state contains "options=4aca52"
+A expect rando_placed $bowslot == weapon_bow_reinforcedBow
+
+A lootmode shared
+A host
+A wait code=* timeout=60
+B join $A.code
+A wait players=2 timeout=60
+B wait players=2 timeout=60
+
+# The client reloads into the host's run: its seed, its options, its placements.
+B expect state contains "rando=4242" timeout=180
+B wait world=1 timeout=240
+B expect state contains "options=4aca52" timeout=10
+A expect rando_run == "4242|0.1.1.1.0.0.0.0.1.1.0.0.10.0.5.0.0.0.8.5.7.1.0.0.0.0.1.0.0.0.0.0"
+B expect rando_run == "4242|0.1.1.1.0.0.0.0.1.1.0.0.10.0.5.0.0.0.8.5.7.1.0.0.0.0.1.0.0.0.0.0" timeout=10
+B expect rando_placed $bowslot == weapon_bow_reinforcedBow
+A expect rando_prefab $spawner == ea9242bb13f7fed40ba9b9f01ef2004e
+B expect rando_prefab $spawner == ea9242bb13f7fed40ba9b9f01ef2004e timeout=30
+
+# Both see the host's shelf at Olaf.
+A rando_money 5000
+A tpnear $olaf 0 80
+B tpnear $olaf 60 0
+A expect near $olaf 1000 contains loaded timeout=30
+B expect near $olaf 1000 contains loaded timeout=30
+A rando_trade $olaf
+B rando_trade $olaf
+A expect rando_shelf contains "weapon_bow_reinforcedBow:1;" timeout=10
+B expect rando_shelf contains "weapon_bow_reinforcedBow:1;" timeout=10
+B expect rando_shelf !contains "weapon_axe_jawboneAxe"
+B merchant close
+
+# Shared loot: the host buys the bow, the slot is checked and gone for the client too.
+A merchant take weapon_bow_reinforcedBow 1
+A merchant give misc_currency 150
+A merchant accept
+A expect state contains "checked=1" timeout=10
+A expect inventory reinforcedBow == "weapon_bow_reinforcedBow:1;" timeout=10
+B expect state contains "checked=1" timeout=15
+B expect inventory reinforcedBow == none
+B rando_trade $olaf
+B expect rando_shelf !contains "weapon_bow_reinforcedBow" timeout=10
+B merchant close
+A merchant close
+
+# Leaving gives the client its own run back, untouched: its seed, options, shelf and monsters.
+B leave
+B expect state contains "rando=777 checked=0" timeout=60
+B expect state contains "options=ffd0a6"
+B expect rando_placed $bowslot == weapon_axe_jawboneAxe
+B expect rando_prefab $spawner == b80e30fffb7cf9244a9a113fd10a9044 timeout=30
+B expect near $olaf 1000 contains loaded timeout=30
+B rando_trade $olaf
+B expect rando_shelf contains "weapon_axe_jawboneAxe:1;" timeout=10
+B merchant close

@@ -1,0 +1,29 @@
+# Monster shuffle: a spawner builds another creature with the seed, its own without.
+set spawner abc99d05-d962-499b-9597-deee6f6a0b04
+launch A
+A wait ready=1 timeout=240
+A wait saves=separate
+A load 5 0
+A wait world=1 timeout=240
+A run invincibility
+# LazyActor_ShadowRipper_04 near the start, vanilla prefab ShadowRipper.
+A expect rando_prefab $spawner == b80e30fffb7cf9244a9a113fd10a9044 timeout=20
+A expect objects ShadowRipper list contains "LazyActor_ShadowRipper_04/ShadowRipper (Clone)" timeout=20
+A run rando_start 4242 default monster_shuffle=1
+A expect state contains "rando=4242" timeout=10
+# Spoiler of seed 4242 + monster_shuffle=1 (same tier): this spawner builds an ambush shadow ripper.
+A expect rando_prefab $spawner == ea9242bb13f7fed40ba9b9f01ef2004e
+A expect objects ShadowRipper_Ambush list contains "LazyActor_ShadowRipper_04/ShadowRipper_Ambush (Clone)" timeout=30
+A save 63
+sleep 3
+A load 5 63
+A wait world=1 timeout=240
+A expect state contains "rando=4242" timeout=10
+A expect objects ShadowRipper_Ambush list contains "LazyActor_ShadowRipper_04/ShadowRipper_Ambush (Clone)" timeout=30
+A expect objects ShadowRipper list !contains "LazyActor_ShadowRipper_04/ShadowRipper (Clone)"
+
+# Without a run the spawner is its own creature again.
+A load 5 0
+A wait world=1 timeout=240
+A expect state contains "rando=none"
+A expect rando_prefab $spawner == b80e30fffb7cf9244a9a113fd10a9044 timeout=20

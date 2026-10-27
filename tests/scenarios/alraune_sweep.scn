@@ -1,0 +1,8 @@
+# Starts a game for tools/sweep_alraune_spots.py (run with --keep, then run the script).
+launch A
+A wait ready=1 timeout=240
+A wait saves=separate
+A load 5 0
+A wait world=1 timeout=240
+A run invincibility
+A expect rando_alraunes contains "@" timeout=10

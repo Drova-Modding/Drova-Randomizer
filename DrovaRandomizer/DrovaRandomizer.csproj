@@ -1,0 +1,74 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>annotations</Nullable>
+		<RootNamespace>DrovaRandomizer</RootNamespace>
+		<AssemblyName>DrovaRandomizer</AssemblyName>
+		<IsPackable>false</IsPackable>
+		<NeutralLanguage>en-US</NeutralLanguage>
+		<LangVersion>latest</LangVersion>
+		<!-- MelonLoader loads the AnyCPU mod into the x64 game, so the x64 interop references are not a real conflict. -->
+		<ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Reference Include="Drova_Modding_API">
+			<HintPath>$(GamePath)/Mods\Drova_Modding_API.dll</HintPath>
+			<Private>false</Private>
+		</Reference>
+		<!-- MelonLoader ships Newtonsoft, so never deploy a copy. -->
+		<Reference Include="Newtonsoft.Json">
+			<HintPath>$(GamePath)/MelonLoader\net6\Newtonsoft.Json.dll</HintPath>
+			<Private>false</Private>
+		</Reference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Reference Include="$(GamePath)/MelonLoader/Il2CppAssemblies/*.dll" Private="false" />
+		<Reference Include="MelonLoader">
+			<HintPath>$(GamePath)/MelonLoader\net6\MelonLoader.dll</HintPath>
+		</Reference>
+		<Reference Include="0Harmony">
+			<HintPath>$(GamePath)/MelonLoader\net6\0Harmony.dll</HintPath>
+		</Reference>
+		<Reference Include="Il2CppInterop.Runtime">
+			<HintPath>$(GamePath)/MelonLoader\net6\Il2CppInterop.Runtime.dll</HintPath>
+		</Reference>
+		<Reference Include="Il2CppInterop.Common">
+			<HintPath>$(GamePath)/MelonLoader\net6\Il2CppInterop.Common.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Remove="Access\RandoTestCommands.cs" Condition="'$(Configuration)'!='Debug'" />
+	</ItemGroup>
+
+	<!-- SkipDeploy=true builds without copying into the game, e.g. while Drova holds the DLL open. -->
+
+	<Target Name="Deploy" AfterTargets="PostBuildEvent" Condition="'$(SkipDeploy)' != 'true'">
+		<Copy SourceFiles="$(TargetPath)" DestinationFolder="$(GamePath)/Mods" />
+	</Target>
+
+	<Target Name="PackageMod" AfterTargets="PostBuildEvent">
+		<PropertyGroup>
+			<DistDir>$(MSBuildProjectDirectory)\..\dist</DistDir>
+			<StagingDir>$(DistDir)\staging\$(Configuration)</StagingDir>
+			<ZipName Condition="'$(Configuration)'=='Debug'">DrovaRandomizer_Dev.zip</ZipName>
+			<ZipName Condition="'$(ZipName)'==''">DrovaRandomizer.zip</ZipName>
+			<ZipPath>$(DistDir)\$(ZipName)</ZipPath>
+		</PropertyGroup>
+
+		<RemoveDir Directories="$(StagingDir)" />
+		<MakeDir Directories="$(DistDir);$(StagingDir)\Mods" />
+
+		<Copy SourceFiles="$(TargetPath)" DestinationFolder="$(StagingDir)\Mods" />
+		<!-- The DLL carries the rune art, so its license ships with it. -->
+		<Copy SourceFiles="..\LICENSE" DestinationFiles="$(StagingDir)\Mods\DrovaRandomizer\LICENSE.txt" />
+		<Copy SourceFiles="..\assets\LICENSE" DestinationFiles="$(StagingDir)\Mods\DrovaRandomizer\LICENSE-art.txt" />
+
+		<Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;Compress-Archive -Path '$(StagingDir)\*' -DestinationPath '$(ZipPath)' -Force&quot;" />
+
+		<Message Importance="high" Text="Packaged $(Configuration) build -&gt; $(ZipPath)" />
+	</Target>
+</Project>

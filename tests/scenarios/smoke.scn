@@ -1,0 +1,37 @@
+# Starts a run, checks a chest, survives save + reload, rewires a cave entrance.
+default hero 5
+set chest 9ef36818-d9a4-4d48-8968-4cf20e7665f0
+launch A
+A wait ready=1 timeout=240
+A wait saves=separate
+A load $hero 0
+A wait world=1 timeout=240
+A expect state contains "rando=none"
+
+# Seed 4242: Forest Primeval - Chest 1 is one location, however many items it holds. It holds the Flow Cyclone recipe.
+A run rando_start 4242 default
+A expect state contains "rando=4242" timeout=10
+A expect inventory weapon_axe_bronzeTusk contains "weapon_axe_bronzeTusk" timeout=10
+A use Container_Bag 1500
+A expect state contains "checked=1" timeout=10
+A expect inventory flow_cyclone contains "recipe_flow_cyclone:1" timeout=10
+A expect chest $chest == none
+
+A save 61
+sleep 3
+A load $hero 61
+A wait world=1 timeout=240
+A expect state contains "rando=4242 checked=1 pending=0" timeout=10
+
+# A fresh save with cave entrances shuffled: the tavern cave mouth no longer leads to its own cave.
+A load $hero 0
+A wait world=1 timeout=240
+A expect state contains "rando=none"
+A run rando_start 4242 default teleporters=1
+A expect state contains "rando=4242" timeout=10
+# Spoiler: Teleporter_TavernCave <-> Teleporter_BoarCave_Forest_Exit, whose vanilla mouth lands at 21712,46999.
+A expect rando_gate Teleporter_TavernCave contains "-> 21712,46999"
+A tp -1545,-4430
+sleep 3
+A walk 0 1 3
+A expect state contains "pos=217" timeout=15

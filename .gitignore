@@ -1,0 +1,16 @@
+bin/
+obj/
+.vs/
+.idea/
+*.user
+__pycache__/
+
+# Regenerable extraction cache (~75s to rebuild; see tools/extract_locations)
+*.pkl
+
+# Test runner recordings
+tests/scenarios/recordings/
+tests/scenarios/failed-logs/
+
+# Release zips.
+dist/

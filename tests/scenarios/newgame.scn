@@ -1,0 +1,17 @@
+# A run chosen in character creation: finishing the character skips the intro and the run starts once the
+# player is in the world.
+launch A
+A wait ready=1 timeout=240
+A wait saves=separate timeout=1
+
+A rando_newgame 9
+A expect state contains "cc=1" timeout=120
+A rando_cc 4242 traders=1
+# The scene is up before its dresser UI is: Finish throws inside the game until then.
+A expect rando_finishcc == finished timeout=60
+A expect state contains "cc=0" timeout=5
+A wait world=1 timeout=240
+A expect state contains "rando=4242" timeout=60
+A expect rando_run contains "4242|0.1.1.1.0.0.0.0.1."
+# The run's starting tools reach the new character.
+A expect inventory bronzeTusk == "weapon_axe_bronzeTusk:1;" timeout=30

@@ -1,0 +1,74 @@
+# Shop rando: a trader's shelf sells the items the run placed there, buying one checks its slot, and the trade
+# inventory the game saves stays vanilla.
+set olaf 52b3d368-a4c0-4a62-9542-1f597c3e669b
+launch A
+A wait ready=1 timeout=240
+A wait saves=separate timeout=1
+A load 5 0
+A wait world=1 timeout=240
+A run invincibility
+A rando_money 5000
+
+# Seed 4242 with these options: Olaf's coarse bronze axe slot sells a reinforced bow, his splitting axe slot
+# ten jagged throwing knives, and two slots each sell an old axe.
+A run rando_start 4242 default traders=1 monster_shuffle=1
+A expect state contains "rando=4242 checked=0" timeout=10
+A tpnear $olaf 0 80
+A expect near $olaf 1000 contains loaded timeout=30
+A rando_trade $olaf
+A expect merchant contains open=1 timeout=10
+A expect rando_shelf contains "weapon_bow_reinforcedBow:1;"
+A expect rando_shelf contains "item_jaggedthrowingknife:10;"
+A expect rando_shelf !contains "weapon_axe_coarseBronzeAxe"
+A expect rando_shelf !contains "weapon_sword_oldBronzeGladius"
+
+# Buying the bow checks its slot and hands over the bow only.
+A merchant take weapon_bow_reinforcedBow 1
+A merchant give misc_currency 150
+A merchant accept
+A expect state contains "checked=1" timeout=10
+A expect inventory reinforcedBow == "weapon_bow_reinforcedBow:1;" timeout=10
+A expect inventory coarseBronzeAxe == none
+A expect rando_tradestock $olaf contains "weapon_axe_coarseBronzeAxe:1"
+
+# Part of a stack: the slot is checked on the first buy, the rest stays on the shelf.
+A merchant take item_jaggedthrowingknife 4
+A merchant give misc_currency 180
+A merchant accept
+A expect state contains "checked=2" timeout=10
+A expect inventory jaggedthrowingknife contains "item_jaggedthrowingknife:4" timeout=10
+A merchant close
+A rando_trade $olaf
+A expect rando_shelf contains "item_jaggedthrowingknife:6;" timeout=10
+A expect rando_shelf !contains "weapon_bow_reinforcedBow"
+
+# Two slots with the same item: buying both empties both, one check each.
+A merchant take weapon_axe_oldAxe 1
+A merchant give misc_currency 400
+A merchant accept
+A expect state contains "checked=3" timeout=10
+A merchant close
+A rando_trade $olaf
+A expect rando_shelf contains "weapon_axe_oldAxe:1;" timeout=10
+A merchant take weapon_axe_oldAxe 1
+A merchant give misc_currency 400
+A merchant accept
+A expect state contains "checked=4" timeout=10
+A merchant close
+A rando_trade $olaf
+A expect rando_shelf !contains "weapon_axe_oldAxe" timeout=10
+A merchant close
+
+# The bought-out slots and the rest of the knives survive a save and reload. The trade inventory is vanilla.
+A save 68
+sleep 3
+A load 5 68
+A wait world=1 timeout=240
+A expect state contains "rando=4242 checked=4" timeout=30
+A tpnear $olaf 0 80
+A expect near $olaf 1000 contains loaded timeout=30
+A rando_trade $olaf
+A expect rando_shelf contains "item_jaggedthrowingknife:6;" timeout=10
+A expect rando_shelf !contains "weapon_bow_reinforcedBow"
+A expect rando_tradestock $olaf contains "weapon_axe_coarseBronzeAxe:1"
+A merchant close

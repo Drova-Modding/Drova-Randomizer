@@ -1,0 +1,69 @@
+# Co-op: the host's run is the session's. The client plays it after one reload, with the same monsters
+# and Mandragora spots, its own checks and items, and gets its own (no) run back when it leaves.
+# Needs the co-op mod (DrovaCoopMod) installed.
+set spawner abc99d05-d962-499b-9597-deee6f6a0b04
+set plant 8ed95097-c8f3-42c7-bb43-d91e3e0347d1
+
+launch A
+launch B
+A wait ready=1 timeout=240
+B wait ready=1 timeout=240
+A wait saves=separate timeout=1
+B wait saves=separate timeout=1
+A load 5 0
+B load 5 0
+A wait world=1 timeout=240
+B wait world=1 timeout=240
+
+A run rando_start 4242 default monster_shuffle=1 mandragora_placement=1
+A expect state contains "rando=4242" timeout=10
+B expect state contains "rando=none"
+B expect inventory bronzeTusk == none
+# The co-op reload loads the newest save, so the run starts from a fresh copy of slot 0.
+B save 67
+sleep 3
+
+A lootmode instanced
+A host
+A wait code=* timeout=60
+B join $A.code
+A wait players=2 timeout=60
+B wait players=2 timeout=60
+
+# The client reloads once with the host's run. Seed 4242 with these options: the ShadowRipper spawner builds a
+# ShadowRipper_Ambush, plant 8ed95097 stands at 3345,-8262.
+B expect state contains "rando=4242" timeout=180
+B wait world=1 timeout=240
+A expect hostsetting DrovaRandomizer.Run contains "4242|"
+B expect hostsetting DrovaRandomizer.Run contains "4242|" timeout=10
+A expect rando_prefab $spawner == ea9242bb13f7fed40ba9b9f01ef2004e
+B expect rando_prefab $spawner == ea9242bb13f7fed40ba9b9f01ef2004e timeout=30
+A expect rando_alraunes contains "$plant@3345,-8262"
+B expect rando_alraunes contains "$plant@3345,-8262" timeout=30
+# The starting items queued by the reload reach the client's new body.
+B expect inventory bronzeTusk == "weapon_axe_bronzeTusk:1;" timeout=30
+
+# A check by the client grants the client only (instanced loot). This run puts the Flow Cyclone recipe in the bag.
+B use Container_Bag 1500
+B expect state contains "checked=1" timeout=15
+B expect inventory flow_cyclone contains "recipe_flow_cyclone:1" timeout=10
+A expect state contains "checked=0"
+A expect inventory flow_cyclone == none
+B save 66
+sleep 3
+
+# Leaving gives the client its own save's state back: no run.
+B leave
+B expect state contains "rando=none" timeout=30
+B expect rando_prefab $spawner == b80e30fffb7cf9244a9a113fd10a9044 timeout=30
+B expect rando_alraunes contains "$plant@6223,-477" timeout=30
+
+# Rejoining resumes the progress kept in the client's save: the check stays done, no second starting items.
+B load 5 66
+B wait world=1 timeout=240
+B expect state contains "rando=none" timeout=10
+B join $A.code
+B expect state contains "rando=4242 checked=1" timeout=180
+B wait world=1 timeout=240
+B expect inventory bronzeTusk == "weapon_axe_bronzeTusk:1;" timeout=10
+B expect inventory flow_cyclone contains "recipe_flow_cyclone:1"

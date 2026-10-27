@@ -1,0 +1,81 @@
+# Check sources beyond chests: a mugging, an ore vein, a cache. Each hook fires, gives the placed item and
+# nothing vanilla; a mugged NPC keeps its gear and can still hand it out. Joining the other faction warns once.
+set elgar 0a0160b3-607f-425e-ac54-e55e07a61f35
+launch A
+A wait ready=1 timeout=240
+A wait saves=separate
+A load 5 0
+A wait world=1 timeout=240
+A run invincibility
+A run rando_start 4242 default resources=1 caches=1 muggings=1
+A expect state contains "rando=4242 checked=0" timeout=10
+
+# Mugging Elgar (Heath) gives a heart only: he keeps his frog mask, armor and weapons, loses his herbs.
+A unequip
+A tp -2096,-6860
+sleep 4
+A tpnear $elgar 16 0
+A rando_brawl $elgar
+A expect ai $elgar contains brawl=1 timeout=5
+A ?hit $elgar 150 physical
+sleep 0.5
+A ?hit $elgar 150 physical
+sleep 0.5
+A ?hit $elgar 150 physical
+sleep 0.5
+A ?hit $elgar 150 physical
+sleep 0.5
+A ?hit $elgar 150 physical
+A expect ai $elgar contains ko=1 timeout=10
+A expect ai me contains brawl=0 timeout=10
+sleep 3
+A tpnear $elgar 10 0
+A expect rando_mug $elgar == used timeout=10
+A expect state contains "checked=1" timeout=10
+A expect inventory item_heart contains "item_heart" timeout=10
+A takeall
+sleep 1
+A expect inventory mask == none
+A expect inventory roughSword == none
+A expect rando_actoritems $elgar contains "helmet_mask_frog_name:1;armor_chest_leather_name:1;weapon_sword_roughSword:1"
+A expect rando_actoritems $elgar !contains "item_redHerb"
+# He gives the mask away in his quest dialogue as before.
+A expect ai $elgar contains ko=0 timeout=60
+A talk $elgar DT_Quest_GavePlayerMask_NPC_Elgar
+sleep 2
+A skip first
+A expect inventory mask contains "helmet_mask_frog_name:1" timeout=30
+
+# Seed 4242: Coniferous Forest - Resource 7 (an iron vein) holds a flow plant. A skipped minigame gives
+# only them, through Interact_Bhvr_ResourceSpot.GetItems.
+A tp -2600,-3720
+sleep 4
+A expect use Interact_ItemMinigame 300 contains used timeout=15
+A expect state contains "checked=2" timeout=10
+A expect inventory flowPlant_0 contains "item_flowPlant_0" timeout=10
+A expect inventory ironore == none
+A expect rando_hooks Interact_Bhvr_ResourceSpot.GetItems !contains "=0"
+
+# Coniferous Forest - Cache 4 breaks to an axe and holds a small experience boost (SpawnFromLootTable.SpawnLoot).
+A equip weapon_axe_blaansoldsword
+A tp -1810,-4591
+sleep 4
+A look -1829,-4591
+A press PrimaryAttack
+sleep 1.2
+A press PrimaryAttack
+sleep 1.2
+A press PrimaryAttack
+sleep 1.2
+A press PrimaryAttack
+sleep 1.2
+A press PrimaryAttack
+sleep 1.2
+A press PrimaryAttack
+A expect state contains "checked=3" timeout=10
+A expect rando_hooks SpawnFromLootTable.SpawnLoot !contains "=0"
+
+# Run faction Nemeton, the player joins the Remnants: one warning.
+A expect state contains "factionwarned=0"
+A setgvar QuestVars_OneFaction JoinedRuinenlager 1
+A expect state contains "factionwarned=1" timeout=10

@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="DrovaRandomizer.Tests/DrovaRandomizer.Tests.csproj" />
+  <Project Path="DrovaRandomizer/DrovaRandomizer.csproj" />
+</Solution>
