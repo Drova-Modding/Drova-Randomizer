@@ -11,29 +11,46 @@ B load 5 0
 A wait world=1 timeout=240
 B wait world=1 timeout=240
 
-A run rando_start 4242 default
+A run rando_start 4242 default pickups=1
 A expect state contains "rando=4242" timeout=10
 B save 67
 sleep 3
 
 A lootmode shared
-A host
-A wait code=* timeout=60
-B join $A.code
+A hostlan
+A wait session=Hosting timeout=60
+B joindirect 127.0.0.1
 A wait players=2 timeout=60
 B wait players=2 timeout=60
 B expect state contains "rando=4242" timeout=180
 B wait world=1 timeout=240
 
-# Seed 4242 puts the Flow Cyclone recipe in Forest Primeval - Chest 1, the bag by the start.
+# Seed 4242 (pickups on) puts Roast of the Past in Forest Primeval - Chest 1, the bag by the start.
 B use Container_Bag 1500
 B expect state contains "checked=1" timeout=15
-B expect inventory flow_cyclone contains "recipe_flow_cyclone:1" timeout=10
+B expect inventory roastofthepast contains "item_roastofthepast:" timeout=10
 A expect state contains "checked=1" timeout=15
-A expect inventory flow_cyclone == none
+A expect inventory roastofthepast == none
 
 # The host opening it afterwards gets nothing: no second item, no vanilla loot.
 A use Container_Bag 1500
 sleep 2
 A expect state contains "checked=1"
-A expect inventory flow_cyclone == none
+A expect inventory roastofthepast == none
+
+# A loose pickup shows its placed item. Once the client takes it, the co-op mod's shared loot removes the
+# host's copy for good, so no stale icon is left behind.
+A expect rando_pickup -2237,-5363 contains "icon" timeout=15
+B tp -2237,-5340
+B expect rando_pickup -2237,-5363 contains "icon" timeout=15
+B use Pickup_Misc_Material_Povage 60
+B expect state contains "checked=2" timeout=15
+A expect state contains "checked=2" timeout=15
+A expect rando_pickup -2237,-5363 == none timeout=15
+A expect rando_pickup -2277,-5235 contains "icon"
+A save 68
+sleep 3
+A load 5 68
+A wait world=1 timeout=240
+A expect rando_pickup -2277,-5235 contains "icon" timeout=15
+A expect rando_pickup -2237,-5363 == none

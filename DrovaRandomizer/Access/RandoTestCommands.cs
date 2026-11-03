@@ -101,6 +101,15 @@ namespace DrovaRandomizer.Access
             TestAgent.RegisterCommand("rando_prefab", guid => FindLoaded(guid)._actorReference.AssetGUID);
             TestAgent.RegisterCommand("rando_alraunes", _ => string.Join(";", AlrauneShuffler.Plants.Select(plant =>
                 plant.Key + "@" + Format(plant.Value.position))));
+            // "rando_pickup x,y": the started pickup within 40 units, as "icon <sprite>", "vanilla" or "none".
+            TestAgent.RegisterCommand("rando_pickup", at =>
+            {
+                string[] xy = at.Trim().Split(',');
+                Vector2 spot = new(float.Parse(xy[0], CultureInfo.InvariantCulture), float.Parse(xy[1], CultureInfo.InvariantCulture));
+                PickupSprites.Pickup? near = PickupSprites.Pickups.Values.FirstOrDefault(p => p.Visual
+                    && Vector2.Distance(p.Visual.transform.position, spot) < 40f);
+                return near == null ? "none" : near.Visual.sprite == near.Vanilla ? "vanilla" : "icon " + near.Visual.sprite.name;
+            });
             TestAgent.RegisterCommand("rando_reach", ReachCommand);
             TestAgent.RegisterCommand("rando_placed", key => Randomizer.Active && Randomizer.Seed.Placement.TryGetValue(key.Trim(), out string? id) ? id : "none");
             TestAgent.RegisterCommand("rando_run", _ => Randomizer.RunKey);
