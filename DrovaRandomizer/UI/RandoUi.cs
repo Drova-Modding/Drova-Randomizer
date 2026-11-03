@@ -244,13 +244,14 @@ namespace DrovaRandomizer.UI
 
             GUI.Label(Row(x, y, 70f), "Preset", _label);
             float presetX = x + 70f;
+            float presetWidth = (width - 70f + RowGap) / RandoOptions.Presets.Count - RowGap;
             foreach (string preset in RandoOptions.Presets.Keys)
             {
-                if (GUI.Button(new Rect(presetX, y, 128f, RowHeight), char.ToUpperInvariant(preset[0]) + preset[1..], _button))
+                if (GUI.Button(new Rect(presetX, y, presetWidth, RowHeight), char.ToUpperInvariant(preset[0]) + preset[1..], _button))
                 {
                     _options = RandoOptions.FromPreset(preset)!;
                 }
-                presetX += 128f + RowGap;
+                presetX += presetWidth + RowGap;
             }
             y += RowHeight + SectionGap;
 
@@ -508,7 +509,7 @@ namespace DrovaRandomizer.UI
             try
             {
                 CheatMenuAccess.RegisterCheat("rando_start", OnStartCommand, 0, -1,
-                    "rando_start [seed] [default|minimal|completionist] [option=value ...]", "Start a randomizer run on this save");
+                    "rando_start [seed] [default|minimal|completionist|chaos] [option=value ...]", "Start a randomizer run on this save");
                 _cheatRegistered = true;
             }
             catch (Exception e)

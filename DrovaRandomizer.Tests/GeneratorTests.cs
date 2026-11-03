@@ -150,6 +150,19 @@ namespace DrovaRandomizer.Tests
         }
 
         [Fact]
+        public void CompletionistIsSafeAndChaosMaxesOut()
+        {
+            RandoOptions completionist = RandoOptions.FromPreset("completionist")!;
+            Assert.True(completionist.On(RandoOptions.Teleporters));
+            Assert.Equal(1, completionist[RandoOptions.MonsterShuffle]);
+            Assert.False(completionist.On(RandoOptions.Carnage));
+
+            RandoOptions chaos = RandoOptions.FromPreset("chaos")!;
+            Assert.True(chaos.On(RandoOptions.Carnage));
+            Assert.Equal(2, chaos[RandoOptions.MonsterShuffle]);
+        }
+
+        [Fact]
         public void SameSeedSameRun()
         {
             RandoOptions options = RandoOptions.FromPreset("completionist")!;

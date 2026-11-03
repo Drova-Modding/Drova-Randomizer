@@ -97,15 +97,20 @@ namespace DrovaRandomizer.Systems.Generation
             new(RandomLearning, "Random talent at teachers", 0, 0, 1),
         ];
 
-        /// <summary>Preset name -> the location toggles it sets. Everything else keeps its default.</summary>
+        private static readonly string[] Completionist =
+        [
+            Chests, Containers, Quests, Critters, Resources, Caches, Pickups, Traders, Muggings,
+            Teleporters, Runes, MandragoraPlacement, MonsterShuffle, TalentItems, TeacherShuffle, RandomLearning,
+        ];
+
+        /// <summary>Preset name to the options it switches on. Chaos sets them to their maximum.</summary>
         public static readonly Dictionary<string, string[]> Presets = new()
         {
             { "default", [] },
             { "minimal", [Chests] },
-            { "completionist", [Chests, Containers, Quests, Critters, Resources, Caches, Pickups] },
+            { "completionist", Completionist },
+            { "chaos", [.. Completionist, AllItems, Carnage] },
         };
-
-        private static readonly string[] PresetToggles = [Chests, Containers, Quests, Critters, Resources, Caches, Pickups];
 
         private readonly Dictionary<string, int> _values = new(StringComparer.Ordinal);
 
@@ -143,9 +148,9 @@ namespace DrovaRandomizer.Systems.Generation
             RandoOptions options = new();
             if (name != "default")
             {
-                foreach (string key in PresetToggles)
+                foreach (OptionDef def in Defs.Where(def => Presets["chaos"].Contains(def.Key)))
                 {
-                    options[key] = Array.IndexOf(toggles, key) >= 0 ? 1 : 0;
+                    options[def.Key] = !toggles.Contains(def.Key) ? 0 : name == "chaos" ? def.Max : 1;
                 }
             }
             return options;
