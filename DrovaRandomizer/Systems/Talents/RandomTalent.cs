@@ -6,11 +6,9 @@ using Drova_Modding_API.Access;
 using Drova_Modding_API.Systems.Talents;
 using Il2Cpp;
 using Il2CppDrova;
-using Il2CppDrova.GUI;
 using Il2CppDrova.GUI.LearnGUI;
 using Il2CppDrova.Talent;
 using MelonLoader;
-using UnityEngine;
 using Il2CppCollections = Il2CppSystem.Collections.Generic;
 using Object = UnityEngine.Object;
 
@@ -31,7 +29,6 @@ namespace DrovaRandomizer.Systems.Talents
         private const string GuidPrefix = "drova-randomizer-random-talent-";
 
         private static readonly Dictionary<int, TalentContainer> EntryByCost = new();
-        private static readonly Dictionary<int, (float Row, float Frame, float Step)> BaseWidths = new();
         private static RandoSeed? _seed;
         private static bool _learning;
 
@@ -175,44 +172,6 @@ namespace DrovaRandomizer.Systems.Talents
         internal static bool AllowsTalent(TalentContainer? talent)
         {
             return talent == null || !IsEntry(talent.GUID);
-        }
-
-        /// <summary>
-        /// The window has four talent buttons. A teacher with four talents plus the entry needs a fifth. The
-        /// talent row and its frame are widened by one button step for it, and back for four.
-        /// </summary>
-        internal static void OnSetLearnableTalents(GUI_LearnWindow window, Il2CppCollections.List<TeachableTalent>? talents)
-        {
-            try
-            {
-                Il2CppCollections.List<GUI_Talent_LearnButton> buttons = window._talentButtons;
-                if (talents == null || buttons == null || buttons.Count == 0)
-                {
-                    return;
-                }
-
-                RectTransform row = buttons[0].transform.parent.TryCast<RectTransform>()!;
-                RectTransform frame = row.parent.TryCast<RectTransform>()!;
-                if (!BaseWidths.ContainsKey(row.GetInstanceID()))
-                {
-                    BaseWidths[row.GetInstanceID()] = (row.sizeDelta.x, frame.sizeDelta.x, row.rect.width / buttons.Count);
-                }
-                (float rowWidth, float frameWidth, float step) = BaseWidths[row.GetInstanceID()];
-
-                while (buttons.Count < talents.Count)
-                {
-                    GUI_Talent_LearnButton last = buttons[^1];
-                    buttons.Add(Object.Instantiate(last.gameObject, last.transform.parent).GetComponent<GUI_Talent_LearnButton>());
-                }
-
-                float extra = Math.Max(0, talents.Count - 4) * step;
-                row.sizeDelta = new Vector2(rowWidth + extra, row.sizeDelta.y);
-                frame.sizeDelta = new Vector2(frameWidth + extra, frame.sizeDelta.y);
-            }
-            catch (Exception e)
-            {
-                MelonLogger.Error("[Rando talents] adding a learn button failed: " + e);
-            }
         }
     }
 }

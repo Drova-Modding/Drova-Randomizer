@@ -1,8 +1,6 @@
 using Drova_Modding_API;
 using HarmonyLib;
-using Il2CppDrova.GUI.LearnGUI;
 using Il2CppDrova.Talent;
-using Il2CppCollections = Il2CppSystem.Collections.Generic;
 
 namespace DrovaRandomizer.Systems.Talents.Patches
 {
@@ -20,8 +18,6 @@ namespace DrovaRandomizer.Systems.Talents.Patches
                 "TalentActorModule.AddKnownTalent(TalentContainer)");
             Hooking.TryPrefix(harmony, typeof(TalentActorModule), nameof(TalentActorModule.SetNextTalentsIsKnown),
                 typeof(RandomTalentPatches), nameof(KnownTalentPrefix));
-            Hooking.TryPrefix(harmony, typeof(GUI_LearnWindow), nameof(GUI_LearnWindow.SetLearnableTalents),
-                typeof(RandomTalentPatches), nameof(SetLearnableTalentsPrefix));
         }
 
         private static void CanLearnTalentPostfix(TalentActorModule __instance, string GUID, ref bool __result)
@@ -37,11 +33,6 @@ namespace DrovaRandomizer.Systems.Talents.Patches
         private static bool KnownTalentPrefix(TalentContainer talent)
         {
             return RandomTalent.AllowsTalent(talent);
-        }
-
-        private static void SetLearnableTalentsPrefix(GUI_LearnWindow __instance, Il2CppCollections.List<TeachableTalent> talents)
-        {
-            RandomTalent.OnSetLearnableTalents(__instance, talents);
         }
     }
 }
