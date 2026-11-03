@@ -6,7 +6,7 @@ rune riddles, Mandragora plants, monsters and teachers can be shuffled too. No s
 
 ## Install
 
-1. Install MelonLoader and the [Drova Modding API](https://github.com/Drova-Modding/Drova-Modding-API) 0.7.0 or newer.
+1. Install MelonLoader and the [Drova Modding API](https://github.com/Drova-Modding/Drova-Modding-API) 0.8.0 or newer.
 2. Extract `DrovaRandomizer.zip` into the game folder.
 
 Don't play a randomizer run and an ArchipelagoDrova seed on the same save.
@@ -29,7 +29,7 @@ the same run.
 need the same randomizer version. With shared loot on, a location one player loots or buys from is done for
 everyone.
 
-**Console:** `rando_start [seed] [default|minimal|completionist] [option=value ...]`, for example
+**Console:** `rando_start [seed] [default|minimal|completionist|chaos] [option=value ...]`, for example
 `rando_start 4242 default traders=1`. The option keys are in `Systems/Generation/RandoOptions.cs`.
 
 ## Develop
