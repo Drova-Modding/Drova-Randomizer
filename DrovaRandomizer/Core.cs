@@ -16,7 +16,7 @@ using Il2CppDrova;
 using MelonLoader;
 using UnityEngine;
 
-[assembly: MelonInfo(typeof(DrovaRandomizer.Core), "DrovaRandomizer", "0.2.0", "TrustNoOneElse")]
+[assembly: MelonInfo(typeof(DrovaRandomizer.Core), "DrovaRandomizer", "0.3.0", "TrustNoOneElse")]
 [assembly: MelonGame("Just2D", "Drova")]
 [assembly: MelonAdditionalDependencies("Drova_Modding_API")]
 
@@ -64,6 +64,7 @@ namespace DrovaRandomizer
                 new RuneHintOverlay(),
                 new FloorRiddleShuffler(),
                 new MonsterShuffler(),
+                new Rarities(),
                 new RandomTalent(),
                 new TalentShuffler(),
                 new AlrauneShuffler(),

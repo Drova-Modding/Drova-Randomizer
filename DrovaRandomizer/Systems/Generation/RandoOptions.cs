@@ -56,6 +56,7 @@ namespace DrovaRandomizer.Systems.Generation
         public const string TeacherShuffle = "teacher_shuffle";
         public const string StartingTalents = "starting_talents";
         public const string RandomLearning = "random_learning";
+        public const string Rarities = "rarities";
 
         /// <summary>
         /// Every option in display and storage order. Append new options at the end and never remove or
@@ -95,6 +96,7 @@ namespace DrovaRandomizer.Systems.Generation
             new(StartingTalents, "Starting talents", 0, 0, 3),
             new(Carnage, "Carnage (may soft-lock)", 0, 0, 1),
             new(RandomLearning, "Random talent at teachers", 0, 0, 1),
+            new(Rarities, "Item rarities and elite enemies", 0, 0, 1),
         ];
 
         private static readonly string[] Completionist =

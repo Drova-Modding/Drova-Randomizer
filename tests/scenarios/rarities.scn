@@ -1,0 +1,63 @@
+# Rarities: variants are registered with their own stats, elites come up buffed and geared after a load, a variant weapon scales its hit, spell procs land.
+# Adder_20 is a rare elite with seed 4242 (7 of 5 health), Adder_03 is common.
+set elite a48f735f-60d2-4ddc-a2c5-6614b8754fe5
+set adder 9d454245-51a2-45c6-98e0-2e9e18e469af
+launch C
+C wait ready=1 timeout=240
+C wait saves=separate
+C expect rando_rarities contains "variants=" timeout=10
+C expect rando_rarities !contains "variants=0 "
+# A variant's tooltip numbers are its own: axe damage 7 * 1.34, heavy armour 240 and 80 scaled up.
+C expect rando_itemstats weapon_axe_bronzeTusk contains "damage=7 "
+C expect rando_itemstats weapon_axe_bronzeTusk_r4v0 contains "damage=9.38 armour=0 magic=0 rarity=Legendary"
+C expect rando_itemstats armor_chest_heavy_atlanter contains "armour=240 magic=80"
+C expect rando_itemstats armor_chest_heavy_atlanter_r4v0 contains "armour=356 magic=119"
+C load 5 0
+C wait world=1 timeout=240
+C run invincibility
+C run rando_start 4242 default rarities=1
+C expect state contains "rando=4242" timeout=10
+C give weapon_axe_bronzeTusk_r4v0
+C expect inventory bronzeTusk_r4v0 contains "weapon_axe_bronzeTusk_r4v0" timeout=10
+# Bodies that stood there before the run started are rebuilt as elites.
+C expect rando_rarities !contains "elites=0 " timeout=30
+C expect rando_rarities contains "unbuffed=0 " timeout=30
+C save 64
+sleep 3
+C load 5 64
+C wait world=1 timeout=240
+C run invincibility
+C expect state contains "rando=4242" timeout=10
+C expect rando_rarities !contains "elites=0 " timeout=30
+C expect rando_rarities contains "unbuffed=0 "
+C expect rando_rarities contains "LazyActor_Critter_Adder_20:2:7/5:xp25"
+# An elite human wears and wields variants of its rarity.
+C expect rando_rarities contains "LazyActor_NPC_Olaf:3:4375/2500:xp800:gear=armor_chest_leather_strong_name_r3v1+weapon_axe_bearSlaughtererAxe_r3v1"
+# Every kind of spell resolves: one that spawns an ability, one from a random pattern, one that buffs its caster.
+C expect rando_spell flow_energyProjectile == "ability ABI_Flow_EnergyProjectile"
+C expect rando_spell flow_cyclone == "ability ABI_Flow_Cyclone"
+C expect rando_spell flow_travelForm == "effect StatusEffect_Flow_TravelForm"
+
+# The energy bolt proc kills a common adder.
+C tpnear $adder 90 0
+C expect near $adder 600 contains loaded timeout=20
+C expect health $adder == 5/5 timeout=15
+C rando_proc $adder flow_energyProjectile
+C expect health $adder contains dead timeout=10
+
+# The first press draws the axe, the second lands. The hook saw the variant and its power.
+C equip weapon_axe_bronzeTusk_r4v0
+C tpnear $elite 25 0
+C expect near $elite 600 contains loaded timeout=20
+C look $elite
+C press primaryattack 0.05
+sleep 1.5
+C tpnear $elite 25 0
+C look $elite
+C press primaryattack 0.05
+C expect health $elite contains dead timeout=10
+C expect rando_rarities contains "weapon_axe_bronzeTusk_r4v0_1.34"
+
+# A caster buff as a proc lands on the player.
+C rando_proc $adder flow_natureTouch
+C expect effects me contains StatusEffect_Flow_NatureTouch timeout=10

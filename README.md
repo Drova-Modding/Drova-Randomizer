@@ -24,6 +24,13 @@ the same run.
 - With shops on, traders sell the randomized items at their normal price. Keys, quest items, experience and
   talents never end up in a shop.
 - Pick the faction you will join. Quests of the other faction never hold progression.
+- With **Item rarities and elite enemies** on, enemies and NPCs can come up as elites with more health, damage,
+  armour, magic resistance or speed, or an effect on their hits (some trigger it on every hit). They are a bit larger and give far more
+  experience, and elite humans wear and wield gear of their rarity. Weapons and armour you find can be uncommon
+  to legendary: stronger, as their tooltip shows, and from rare upwards with a chance to poison, cause bleeding
+  or cast any of the game's spells on a hit. Killed elites can drop one. The variants are custom
+  items in `Mods/Modding_API/Items/DrovaRandomizer_rarities.json`. Delete that file after removing the mod and
+  saves fall back to the normal items.
 
 **Co-op** (with the co-op mod): everyone plays the host's run. Your own run comes back when you leave. All players
 need the same randomizer version. With shared loot on, a location one player loots or buys from is done for

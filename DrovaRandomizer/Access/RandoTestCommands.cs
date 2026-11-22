@@ -111,6 +111,88 @@ namespace DrovaRandomizer.Access
                 return near == null ? "none" : near.Visual.sprite == near.Vanilla ? "vanilla" : "icon " + near.Visual.sprite.name;
             });
             TestAgent.RegisterCommand("rando_reach", ReachCommand);
+            // "rando_proc <spawner guid> <poison|bleed|spell item id>": the player's proc on that spawner's body.
+            TestAgent.RegisterCommand("rando_proc", args =>
+            {
+                string[] parts = args.Trim().Split(' ');
+                Rarities.RunProc(Player, FindLoaded(parts[0]).Actor, parts[1]);
+                return parts[1];
+            });
+            // "rando_spell <spell item id>": what a proc of that spell does.
+            TestAgent.RegisterCommand("rando_spell", id =>
+            {
+                (Il2CppDrova.ABI.ABI_Ability? ability, Il2CppDrova.StatusEffects.StatusEffect? effect) = Rarities.GetSpellEffect(id.Trim());
+                return ability != null ? "ability " + ability.name : effect != null ? "effect " + effect.name : "none";
+            });
+            // "rando_grant <reward id> <n>": queues a reward n times, as a check would.
+            TestAgent.RegisterCommand("rando_grant", args =>
+            {
+                string[] parts = args.Trim().Split(' ');
+                Randomizer.State.PendingGrants.AddRange(Enumerable.Repeat(parts[0], int.Parse(parts[1])));
+                return parts[1];
+            });
+            // "rando_tooltip <item id>": opens the item's tooltip and answers its name and description.
+            TestAgent.RegisterCommand("rando_tooltip", id =>
+            {
+                Item item = ProviderAccess.ItemDatabase!.GetItemByReadableId(id.Trim());
+                Il2CppDrova.GUI.ToolTip.GUITooltipBuilder.BuildItemTooltip(item, true);
+                return item.GetLocalizedItemName() + " | " + item.GetLocalizedItemDescription();
+            });
+            // "rando_eliteseed <guid> <rarity> [<guid> <least rarity> [always]]": the first seed that rolls those spawners so,
+            // with "always" the second one bleeding its target on every hit.
+            TestAgent.RegisterCommand("rando_eliteseed", args =>
+            {
+                string[] parts = args.Trim().Split(' ');
+                for (ulong seed = 1; seed < 1000000; seed++)
+                {
+                    if (Affixes.RollEnemy(seed, parts[0]).Rarity == int.Parse(parts[1])
+                        && (parts.Length < 4 || Affixes.RollEnemy(seed, parts[2]).Rarity >= int.Parse(parts[3]))
+                        && (parts.Length < 5 || Affixes.RollEnemy(seed, parts[2]) is { Proc: Affixes.Bleed, ProcChance: 1f }))
+                    {
+                        return seed + " " + Affixes.RollEnemy(seed, parts[0]) + (parts.Length < 4 ? "" : " " + Affixes.RollEnemy(seed, parts[2]));
+                    }
+                }
+                return "none";
+            });
+            // "rando_itemstats <item id>": tooltip base damage and armour of an item.
+            TestAgent.RegisterCommand("rando_itemstats", id =>
+            {
+                Item item = ProviderAccess.ItemDatabase!.GetItemByReadableId(id.Trim());
+                Il2CppDrova.Items.Stats.ItemStats? stats = item.Category.MainCategory == ItemMainCategory.Weapon ? new(item) : null;
+                Il2CppDrova.Items.Stats.ItemArmorStats armour = new(item);
+                return "damage=" + (stats != null && stats._primaryStats != null ? stats._primaryStats.BaseDamage().ToString(CultureInfo.InvariantCulture) : "-")
+                    + " armour=" + armour._physicalResistance + " magic=" + armour._magicalResistance + " rarity=" + item.Rarity;
+            });
+            // "lasthit=attacker>defender_weapon_factor variants=N elites=N unbuffed=N" plus name:rarity:health/base:xp of every loaded elite.
+            TestAgent.RegisterCommand("rando_rarities", _ =>
+            {
+                List<string> elites = [];
+                int unbuffed = 0;
+                foreach (Object found in Resources.FindObjectsOfTypeAll(Il2CppType.Of<LazyActor>()))
+                {
+                    LazyActor? lazy = found.TryCast<LazyActor>();
+                    Actor? body = lazy != null && lazy.gameObject.scene.IsValid() ? lazy.Actor : null;
+                    if (body == null || !body.IsInitialized || !Rarities.TryGetElite(body, out EnemyAffix affix))
+                    {
+                        continue;
+                    }
+                    Health health = body.GetHealth();
+                    unbuffed += health.MaxHealth > health.BaseMaxHealth ? 0 : 1;
+                    Il2CppCollections.List<ActorEquipSlot>? slots = body.GetEquipmentModule() != null ? body.GetEquipmentModule().AllItemSlotsRef : null;
+                    List<string> gear = [];
+                    for (int i = 0; slots != null && i < slots.Count; i++)
+                    {
+                        Item? worn = slots[i].GetItemOnSlot();
+                        if (worn != null && worn.ReadableId.Contains("_r" + affix.Rarity + "v"))
+                        {
+                            gear.Add(worn.ReadableId);
+                        }
+                    }
+                    elites.Add(lazy!.name + ":" + affix.Rarity + ":" + health.MaxHealth + "/" + health.BaseMaxHealth + ":xp" + body.GetStats().ExpOnDead
+                        + ":gear=" + string.Join("+", gear));
+                }
+                return "lasthit=" + Rarities.LastHit.Replace(' ', '_') + " variants=" + Rarities.VariantCount + " elites=" + elites.Count + " unbuffed=" + unbuffed + " " + string.Join(",", elites);
+            });
             TestAgent.RegisterCommand("rando_placed", key => Randomizer.Active && Randomizer.Seed.Placement.TryGetValue(key.Trim(), out string? id) ? id : "none");
             TestAgent.RegisterCommand("rando_run", _ => Randomizer.RunKey);
             TestAgent.RegisterCommand("rando_trade", TradeCommand);
