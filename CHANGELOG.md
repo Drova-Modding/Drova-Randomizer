@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.3.0] - 2026-11-22
+### Added
+- New option "Item rarities and elite enemies". Enemies and NPCs can be elites with more health, damage, armour, magic resistance or speed, or a hit effect (some trigger it on every hit). Elites are larger, give much more experience and can drop an item of their rarity, and elite humans carry gear of their rarity.
+- Weapons and armour you find can be uncommon to legendary, with higher stats shown in the tooltip and, from rare upwards, a chance to poison, cause bleeding or cast any of the game's spells on a hit.
+
 ## [0.2.0] - 2026-11-03
 ### Added
 - Loose items show the icon of the item placed there.
