@@ -1,0 +1,40 @@
+# Co-op: both machines roll the same elites from the host's run, with the same gear, and know the same item variants.
+# Seed 37840: Adder_20 is a legendary elite (10 of 5 health). Needs the co-op mod (DrovaCoopMod) installed.
+set elite a48f735f-60d2-4ddc-a2c5-6614b8754fe5
+
+launch A
+launch B
+A wait ready=1 timeout=240
+B wait ready=1 timeout=240
+A wait saves=separate timeout=1
+B wait saves=separate timeout=1
+A load 5 0
+B load 5 0
+A wait world=1 timeout=240
+B wait world=1 timeout=240
+
+A run rando_start 37840 default rarities=1
+A expect state contains "rando=37840" timeout=10
+B expect state contains "rando=none"
+# The co-op reload loads the newest save, so the run starts from a fresh copy of slot 0.
+B save 67
+sleep 3
+
+A lootmode instanced
+A hostlan
+A wait session=Hosting timeout=60
+B joindirect 127.0.0.1
+A wait players=2 timeout=60
+B wait players=2 timeout=60
+B expect state contains "rando=37840" timeout=180
+B wait world=1 timeout=240
+
+A expect rando_rarities contains "LazyActor_Critter_Adder_20:4:10/5:xp85" timeout=30
+A expect rando_rarities contains "unbuffed=0 "
+B expect rando_rarities contains "LazyActor_Critter_Adder_20:4:10/5:xp85" timeout=30
+B expect rando_rarities contains "unbuffed=0 "
+B expect rando_itemstats weapon_axe_bronzeTusk_r4v0 contains "damage=9.38"
+B give weapon_axe_bronzeTusk_r4v0
+B expect inventory bronzeTusk_r4v0 contains "weapon_axe_bronzeTusk_r4v0" timeout=10
+A expect health $elite == 10/10 timeout=10
+B expect health $elite == 10/10 timeout=10

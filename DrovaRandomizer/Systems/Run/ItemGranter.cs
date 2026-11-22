@@ -1,5 +1,6 @@
 using DrovaRandomizer.Data;
 using DrovaRandomizer.Systems.Generation;
+using DrovaRandomizer.Systems.World;
 using Drova_Modding_API.Access;
 using Drova_Modding_API.Systems.Talents;
 using Il2CppDrova;
@@ -92,6 +93,7 @@ namespace DrovaRandomizer.Systems.Run
                     return false;
                 }
 
+                item = Rarities.Upgrade(item);
                 int amount = RollAmount(grant.Amount);
                 inventory.AddItem(new ItemStack(item, amount), true);
                 MelonLogger.Msg("Granted " + amount + "x " + grant.Id + ".");

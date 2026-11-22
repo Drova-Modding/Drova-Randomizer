@@ -64,6 +64,7 @@ namespace DrovaRandomizer
                 new RuneHintOverlay(),
                 new FloorRiddleShuffler(),
                 new MonsterShuffler(),
+                new Rarities(),
                 new RandomTalent(),
                 new TalentShuffler(),
                 new AlrauneShuffler(),
