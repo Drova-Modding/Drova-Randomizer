@@ -6,7 +6,7 @@ rune riddles, Mandragora plants, monsters and teachers can be shuffled too. No s
 
 ## Install
 
-1. Install MelonLoader and the [Drova Modding API](https://github.com/Drova-Modding/Drova-Modding-API) 0.8.0 or newer.
+1. Install MelonLoader and the [Drova Modding API](https://github.com/Drova-Modding/Drova-Modding-API) 0.9.3 or newer.
 2. Extract `DrovaRandomizer.zip` into the game folder.
 
 Don't play a randomizer run and an ArchipelagoDrova seed on the same save.
@@ -25,12 +25,20 @@ the same run.
   talents never end up in a shop.
 - Pick the faction you will join. Quests of the other faction never hold progression.
 - With **Item rarities and elite enemies** on, enemies and NPCs can come up as elites with more health, damage,
-  armour, magic resistance or speed, or an effect on their hits (some trigger it on every hit). They are a bit larger and give far more
-  experience, and elite humans wear and wield gear of their rarity. Weapons and armour you find can be uncommon
-  to legendary: stronger, as their tooltip shows, and from rare upwards with a chance to poison, cause bleeding
-  or cast any of the game's spells on a hit. Killed elites can drop one. The variants are custom
-  items in `Mods/Modding_API/Items/DrovaRandomizer_rarities.json`. Delete that file after removing the mod and
-  saves fall back to the normal items.
+  armour, magic resistance or speed, or an effect on their hits (some poison on every hit). They are a bit larger,
+  give two to five times the experience, and once you fight them show their traits above them in their rarity's colour
+  (Tough, Swift, Venomous, ...); legendary elites carry a name of their own. Some elites have a special trait: Vampiric,
+  Thorned, Volatile (bursts when it dies), Jailer (roots you), Summoner or Regenerating. **Elite frequency** sets how
+  many there are, from Low to Hell. Options > Modding hides these names or changes their size. Elite humans wear and
+  wield gear of their rarity. Weapons and armour you find can be a rarity above their own, up to legendary: stronger,
+  as their tooltip shows, and from rare upwards with a chance to poison, cause bleeding or cast one of the game's
+  attack, summoning or battle cry spells on a hit. Most also carry a bonus (life leech, thorns, an attribute, maximum
+  health or critical hit chance) and are named after what they do. Killed elites drop gold and sometimes items that
+  suit their strength. Strong legendary elites can drop one of eight unique items. Every epic or legendary elite also
+  drops a missing piece of one of three item sets, whose tooltips show how many pieces you wear. Epic and legendary
+  creatures lead the common ones of their kind around them as minions. The variants are custom items in
+  `Mods/Modding_API/Items/DrovaRandomizer_rarities.json`. Delete that file after removing the mod and saves fall back
+  to the normal items.
 
 **Co-op** (with the co-op mod): everyone plays the host's run. Your own run comes back when you leave. All players
 need the same randomizer version. With shared loot on, a location one player loots or buys from is done for
