@@ -10,6 +10,16 @@ namespace DrovaRandomizer.Tests
 
         private static LocationDef Location(string key) => LocationTable.Get(key)!;
 
+        /// <summary>Containers story scenes move the player's whole inventory into: Bernold's chest, the bandit mine and Lothar's.</summary>
+        [Theory]
+        [InlineData("a1a18a53-59a5-4f37-b90d-19386dd45701")]
+        [InlineData("3d8311f8-6bed-4232-abb8-9c11df2f17ed")]
+        [InlineData("1f3320bf-b5bc-472c-af8a-06f331b9ccb0")]
+        public void ContainersThatHoldThePlayersGearAreNoLocations(string guid)
+        {
+            Assert.Null(LocationTable.Get(guid));
+        }
+
         public static IEnumerable<object[]> Variants()
         {
             foreach (string preset in RandoOptions.Presets.Keys)
