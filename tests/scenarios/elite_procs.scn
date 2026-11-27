@@ -1,0 +1,150 @@
+# Hit effects in a real fight. Seed 1603: Kasern bandit 01 is an epic elite that poisons on every hit and carries an epic
+# hunting spear. Its poison must fire on spear hits too, and on every hit. The player wears a legendary ring that casts
+# Pierce when hit and swings a legendary axe that casts Blast on a hit.
+set bandit 644dccb6-bf1b-40c1-869a-60393d1d21b2
+launch C
+C wait ready=1 timeout=240
+C wait saves=separate
+C load 5 0
+C wait world=1 timeout=240
+C run rando_start 1603 default rarities=1
+C expect state contains "rando=1603" timeout=10
+# Enough health to outlast the fight. Invincibility would stop the blows before the damage hook.
+C rando_maxhealth 1000
+C expect health me contains "/1040" timeout=60
+C run heal
+# The weapon goes on first: equipping this two-handed axe after a trinket takes the trinket off again.
+C equip weapon_axe_bronzeTusk_r4v0
+C expect rando_armour contains "armour=0 "
+C equip item_armorring_0_r4v0
+C expect rando_armour contains "armour=6 "
+C expect rando_worn contains "item_armorring_0_r4v0:Armor:True:flow_pierce"
+C tpnear $bandit -25 0
+C expect near $bandit 1000 contains loaded timeout=30
+C expect rando_rarities contains "Human_Bandit_Kasern_01:3:" timeout=30
+# The bandit sits in its camp until hit, then fights back. The first press draws the axe.
+C tpnear $bandit -25 0
+C look $bandit
+C press primaryattack 0.05
+sleep 1.2
+C tpnear $bandit -25 0
+C look $bandit
+C press primaryattack 0.05
+sleep 1.2
+C tpnear $bandit -25 0
+C look $bandit
+C press primaryattack 0.05
+sleep 1.2
+C tpnear $bandit -25 0
+C look $bandit
+C press primaryattack 0.05
+sleep 1.2
+C tpnear $bandit -25 0
+C look $bandit
+C press primaryattack 0.05
+sleep 1.2
+C tpnear $bandit -25 0
+C look $bandit
+C press primaryattack 0.05
+sleep 1.2
+C tpnear $bandit -25 0
+C look $bandit
+C press primaryattack 0.05
+sleep 1.2
+C tpnear $bandit -25 0
+C look $bandit
+C press primaryattack 0.05
+sleep 1.2
+C tpnear $bandit -25 0
+C look $bandit
+C press primaryattack 0.05
+sleep 1.2
+C tpnear $bandit -25 0
+C look $bandit
+C press primaryattack 0.05
+sleep 1.2
+C tpnear $bandit -25 0
+C look $bandit
+C press primaryattack 0.05
+sleep 1.2
+C tpnear $bandit -25 0
+C look $bandit
+C press primaryattack 0.05
+sleep 1.2
+C tpnear $bandit -25 0
+C look $bandit
+C press primaryattack 0.05
+sleep 1.2
+C tpnear $bandit -25 0
+C look $bandit
+C press primaryattack 0.05
+sleep 1.2
+C tpnear $bandit -25 0
+C look $bandit
+C press primaryattack 0.05
+sleep 1.2
+C tpnear $bandit -25 0
+C look $bandit
+C press primaryattack 0.05
+sleep 1.2
+C tpnear $bandit -25 0
+C look $bandit
+C press primaryattack 0.05
+sleep 1.2
+C tpnear $bandit -25 0
+C look $bandit
+C press primaryattack 0.05
+sleep 1.2
+C tpnear $bandit -25 0
+C look $bandit
+C press primaryattack 0.05
+sleep 1.2
+C tpnear $bandit -25 0
+C look $bandit
+C press primaryattack 0.05
+sleep 1.2
+C tpnear $bandit -25 0
+C look $bandit
+C press primaryattack 0.05
+sleep 1.2
+C tpnear $bandit -25 0
+C look $bandit
+C press primaryattack 0.05
+sleep 1.2
+C tpnear $bandit -25 0
+C look $bandit
+C press primaryattack 0.05
+sleep 1.2
+C tpnear $bandit -25 0
+C look $bandit
+C press primaryattack 0.05
+sleep 1.2
+C tpnear $bandit -25 0
+C look $bandit
+C press primaryattack 0.05
+sleep 1.2
+C tpnear $bandit -25 0
+C look $bandit
+C press primaryattack 0.05
+sleep 1.2
+C tpnear $bandit -25 0
+C look $bandit
+C press primaryattack 0.05
+sleep 1.2
+C tpnear $bandit -25 0
+C look $bandit
+C press primaryattack 0.05
+sleep 1.2
+C tpnear $bandit -25 0
+C look $bandit
+C press primaryattack 0.05
+sleep 1.2
+C tpnear $bandit -25 0
+C look $bandit
+C press primaryattack 0.05
+sleep 1.2
+C expect rando_elitehits contains "weapon_spear_huntingSpear_r3v1:poison:1" timeout=30
+C expect rando_elitehits !contains ":0"
+C expect effects me contains StatusEffect_Poison timeout=10
+C expect rando_procs contains "Player_Main(Clone)>Human_Bandit_RuinKasern_01 (Clone):flow_pierce:ability" timeout=30
+C expect rando_procs contains "Player_Main(Clone)>Human_Bandit_RuinKasern_01 (Clone):flow_blast:ability"

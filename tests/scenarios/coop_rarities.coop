@@ -29,9 +29,9 @@ B wait players=2 timeout=60
 B expect state contains "rando=37840" timeout=180
 B wait world=1 timeout=240
 
-A expect rando_rarities contains "LazyActor_Critter_Adder_20:4:10/5:xp85" timeout=30
+A expect rando_rarities contains "LazyActor_Critter_Adder_20:4:10/5:xp25" timeout=30
 A expect rando_rarities contains "unbuffed=0 "
-B expect rando_rarities contains "LazyActor_Critter_Adder_20:4:10/5:xp85" timeout=30
+B expect rando_rarities contains "LazyActor_Critter_Adder_20:4:10/5:xp25" timeout=30
 B expect rando_rarities contains "unbuffed=0 "
 B expect rando_itemstats weapon_axe_bronzeTusk_r4v0 contains "damage=9.38"
 B give weapon_axe_bronzeTusk_r4v0

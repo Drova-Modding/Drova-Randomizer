@@ -1,0 +1,10 @@
+C load 5 0
+C wait world=1 timeout=240
+C expect state contains "rando=none" timeout=60
+C wait world=1 timeout=240
+C run rando_start $seed default rarities=1
+C expect state contains "rando=$seed " timeout=10
+# Enough health to outlast the fights. Invincibility would stop the blows before the damage hook.
+C rando_maxhealth 1000
+C expect health me contains "/1040" timeout=60
+C run heal

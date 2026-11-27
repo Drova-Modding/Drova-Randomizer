@@ -1,0 +1,4 @@
+C tpnear $target $side 0
+C look $target
+C press primaryattack 0.05
+sleep 1.2

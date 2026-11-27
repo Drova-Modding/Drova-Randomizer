@@ -42,12 +42,12 @@ namespace DrovaRandomizer.Systems.World.Patches
 
         private static void BaseDamagePostfix(ActionStats __instance, ref float __result)
         {
-            Rarities.OnBaseDamage(__instance, ref __result);
+            RarityItems.OnBaseDamage(__instance, ref __result);
         }
 
         private static void CalculatePostfix(HealthChange __instance, Health defenderHealth, ref HealthChange.HealthChangeCalc __result)
         {
-            Rarities.OnHit(__instance, defenderHealth, ref __result);
+            EliteCombat.OnHit(__instance, defenderHealth, ref __result);
         }
     }
 }

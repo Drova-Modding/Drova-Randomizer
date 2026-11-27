@@ -156,6 +156,9 @@ STORY_CRITICAL_GUIDS = {
     # in the field: a captured player opened it as a randomized location and the suppressor ate their
     # transferred belongings.
     "3d8311f8-6bed-4232-abb8-9c11df2f17ed": "Bandit-mine capture (Missing): holds the player's own confiscated gear",
+    # "Ruins - Chest 12" at Bernold's. Passing out drunk after Eugen's shots (DT_Quest_ShotsForRipper_NPC_Eugen ->
+    # DS_TransferInventoryNode) moves the player's whole inventory, equipment included, into it.
+    "a1a18a53-59a5-4f37-b90d-19386dd45701": "Eugen's shots: holds the player's gear after passing out drunk",
     # PickUp_Cons_Mushroom around the bandit mine (scenes 13/14_36) - the quest's mushroom supply.
     "8223fb75-92fc-4a7b-b123-0d5e3a71a50d": "Missing: ordinary mushroom near mine",
     "b12b6731-fa78-4826-a72a-9a199feaf26a": "Missing: ordinary mushroom near mine",
