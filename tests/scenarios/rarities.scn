@@ -30,9 +30,10 @@ C run invincibility
 C expect state contains "rando=4242" timeout=10
 C expect rando_rarities !contains "elites=0 " timeout=30
 C expect rando_rarities contains "unbuffed=0 "
-C expect rando_rarities contains "LazyActor_Critter_Adder_20:2:7/5:xp25"
-# An elite human wears and wields variants of its rarity.
-C expect rando_rarities contains "LazyActor_NPC_Olaf:3:4375/2500:xp800:gear=armor_chest_leather_strong_name_r3v1+weapon_axe_bearSlaughtererAxe_r3v1"
+C expect rando_rarities contains "labels=0 "
+C expect rando_rarities contains "LazyActor_Critter_Adder_20:2:7/5:xp15"
+# An elite human wears variants of its rarity, but keeps an axe that is already epic.
+C expect rando_rarities contains "LazyActor_NPC_Olaf:3:4375/2500:xp320:gear=armor_chest_leather_strong_name_r3v1,"
 # Every kind of spell resolves: one that spawns an ability, one from a random pattern, one that buffs its caster.
 C expect rando_spell flow_energyProjectile == "ability ABI_Flow_EnergyProjectile"
 C expect rando_spell flow_cyclone == "ability ABI_Flow_Cyclone"
@@ -57,6 +58,8 @@ C look $elite
 C press primaryattack 0.05
 C expect health $elite contains dead timeout=10
 C expect rando_rarities contains "weapon_axe_bronzeTusk_r4v0_1.34"
+# The hit labels the elite once.
+C expect rando_rarities contains "labels=1 "
 
 # A caster buff as a proc lands on the player.
 C rando_proc $adder flow_natureTouch

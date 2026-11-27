@@ -1,0 +1,142 @@
+# Co-op with affixes, sets and packs: both machines roll the same elites, minions and items from the host's run. Each
+# player's sets count for that player alone, and the client's hits leech and drop loot like the host's.
+# Seed 258 makes Adder_20 (elite) a plain epic and the common adder next to it its minion. Needs the co-op mod.
+set elite a48f735f-60d2-4ddc-a2c5-6614b8754fe5
+set adder 9d454245-51a2-45c6-98e0-2e9e18e469af
+
+launch A
+launch B
+A wait ready=1 timeout=240
+B wait ready=1 timeout=240
+A wait saves=separate timeout=1
+B wait saves=separate timeout=1
+A load 5 0
+B load 5 0
+A wait world=1 timeout=240
+B wait world=1 timeout=240
+
+A run rando_start 258 default rarities=1 elite_frequency=1
+A expect state contains "rando=258 " timeout=10
+# The co-op reload loads the newest save, so the run starts from a fresh copy of slot 0.
+B save 67
+sleep 3
+
+A lootmode instanced
+A hostlan
+A wait session=Hosting timeout=60
+B joindirect 127.0.0.1
+A wait players=2 timeout=60
+B wait players=2 timeout=60
+B expect state contains "rando=258 " timeout=180
+B wait world=1 timeout=240
+A rando_maxhealth 1000
+B rando_maxhealth 1000
+
+# The same elite, minion and item rolls on both machines.
+A expect near $adder 1000 contains loaded timeout=30
+B expect near $adder 1000 contains loaded timeout=30
+A expect rando_elite $elite contains "Rarity = 3," timeout=10
+B expect rando_elite $elite contains "Rarity = 3," timeout=10
+A expect rando_elite $adder contains "Leader = a48f735f-60d2-4ddc-a2c5-6614b8754fe5 } Minion+"
+B expect rando_elite $adder contains "Leader = a48f735f-60d2-4ddc-a2c5-6614b8754fe5 } Minion+"
+A expect health $adder == 7/7 timeout=10
+B expect health $adder == 7/7 timeout=10
+B expect rando_tooltip weapon_axe_bronzeTusk_r4v0 contains "Arcane Bronze Pickaxe of the Fox | " timeout=10
+B expect rando_tooltip weapon_sword_longsword_unique contains "Grimmaw's Fang | "
+
+# The client's set counts and bonuses are the client's. The host's tooltips keep showing the host's own pieces.
+B give weapon_axe_warAxe_set
+B give armor_chest_bandit_T4_set
+B give item_trinket_boxer_set
+B expect inventory boxer_set contains "item_trinket_boxer_set" timeout=10
+B expect equip armor_chest_bandit_T4_set contains "equipped" timeout=10
+B expect equip item_trinket_boxer_set contains "equipped" timeout=10
+B expect equip weapon_axe_warAxe_set contains "equipped" timeout=10
+B expect rando_sets == "worn=3,0,0 shown=3,0,0" timeout=10
+B expect rando_armour contains "strength=11 "
+B expect rando_tooltip weapon_axe_warAxe_set contains "Vorgath's Wrath (3/3 worn)"
+A expect rando_sets == "worn=0,0,0 shown=0,0,0" timeout=10
+A expect rando_armour contains "strength=5 "
+A expect rando_tooltip weapon_axe_warAxe_set contains "Vorgath's Wrath (0/3 worn)"
+
+# The client kills the minion: its full set leeches, the kill drops an uncommon's gold there, and the host sees it die.
+B hit me 30
+set who B
+set target $adder
+include coop_swing.part
+include coop_swing.part
+include coop_swing.part
+include coop_swing.part
+B expect health $adder contains dead timeout=15
+A expect health $adder contains dead timeout=15
+B expect rando_procs contains "Player_Main(Clone)>Player_Main(Clone):leech:" timeout=10
+B expect rando_drop contains "gold=10 tier=0" timeout=10
+
+# The client kills the epic: its drop there includes a piece of the next set.
+set target $elite
+include coop_swing.part
+include coop_swing.part
+include coop_swing.part
+include coop_swing.part
+include coop_swing.part
+include coop_swing.part
+B expect health $elite contains dead timeout=15
+A expect health $elite contains dead timeout=15
+B expect rando_drop contains "gold=60 tier=0 items=" timeout=10
+B expect rando_drop contains "_set"
+
+# The client's weapon power reaches the host, which applies a client's blow on a creature without the weapon. No crits,
+# so the figure is exact: the rare pickaxe hits for 8 * 1.12 with the two set pieces still worn.
+set dummy e6678a4b-50ab-437c-a7fa-53ef05d0cc7b
+set who B
+B run critstop
+B give weapon_axe_bronzeTusk_r2v0
+B expect inventory bronzeTusk_r2v0 contains "weapon_axe_bronzeTusk_r2v0" timeout=10
+B expect equip weapon_axe_bronzeTusk_r2v0 contains "equipped" timeout=10
+B tpnear $dummy 300 0
+B press primaryattack 0.05
+sleep 1.5
+A tpnear $dummy 700 0
+A expect near $dummy 1500 contains loaded timeout=20
+A expect health $dummy == 4000/4000 timeout=10
+set target $dummy
+include coop_swing.part
+A expect health $dummy == 3991/4000 timeout=10
+B expect health $dummy == 3991/4000 timeout=10
+
+# Creature specials run on the host, whoever fights. A regenerating boar heals there, and the client sees it.
+set boar 7a2cc022-4815-4206-b0cd-629233c75a73
+B give weapon_axe_bronzeTusk
+B expect inventory bronzeTusk contains "weapon_axe_bronzeTusk:" timeout=10
+B expect equip weapon_axe_bronzeTusk contains "equipped" timeout=10
+B tpnear $boar 300 0
+A tpnear $boar 700 0
+A expect near $boar 1500 contains loaded timeout=20
+B expect near $boar 1500 contains loaded timeout=20
+set target $boar
+include coop_swing.part
+include coop_swing.part
+include coop_swing.part
+A expect rando_procs contains "Boar_Luminous (Clone)>Boar_Luminous (Clone):regenerating:" timeout=15
+B expect rando_procs !contains ":regenerating:"
+B expect health $boar == 1800/1800 timeout=15
+
+# A summoner boar calls its rats on the host, at the client's body there, and the client sees them.
+set summoner e3aeba3d-107a-4f03-aecd-fc4f18855c23
+B tpnear $summoner 300 0
+A tpnear $summoner 900 0
+A expect near $summoner 1500 contains loaded timeout=20
+B expect near $summoner 1500 contains loaded timeout=20
+set target $summoner
+include coop_swing.part
+include coop_swing.part
+A expect rando_procs contains "Boar_Luminous (Clone)>DrovaCoop.Remote." timeout=30
+A expect rando_procs contains ":flow_conjure_rats:ability"
+B expect actors 400 contains "WaterRat(Clone)" timeout=10
+
+# The client's thorns ring hurts what hits the client once, on the host's copy of the blow.
+B give item_armorring_1_r2v0
+B expect inventory armorring_1_r2v0 contains "item_armorring_1_r2v0" timeout=10
+B expect equip item_armorring_1_r2v0 contains "equipped" timeout=10
+A expect rando_procs contains ">Boar_Luminous (Clone):thorns:" timeout=40
+B expect rando_procs !contains ":thorns:"

@@ -1,0 +1,264 @@
+# Affixes: variant names and bonuses, uniques, elite drops, the elite frequency option, every elite special, all three
+# sets (also after a reload) and the minion label.
+# The seeds give Adder_20 (elite) or Kasern bandit 01 (bandit) one special and no proc, see rando_specialseed.
+set elite a48f735f-60d2-4ddc-a2c5-6614b8754fe5
+set adder 9d454245-51a2-45c6-98e0-2e9e18e469af
+set bandit 644dccb6-bf1b-40c1-869a-60393d1d21b2
+# The side of its target swing.part stands on. The Kasern bandits camp with a stone wall to their east.
+set side 25
+launch C
+C wait ready=1 timeout=240
+C wait saves=separate
+
+set seed 4242
+include affix_run.part
+# A variant with a proc or bonus is named around the base name, read through the game's own LOCA tag.
+C expect rando_tooltip weapon_axe_bronzeTusk_r4v0 contains "Arcane Bronze Pickaxe of the Fox | 20% chance on hit: casts " timeout=10
+C expect rando_tooltip weapon_axe_bronzeTusk_r4v0 contains ". +8 Dexterity."
+C expect rando_tooltip weapon_axe_bronzeTusk_r2v0 == "Bronze Pickaxe of Leeching | Heals 8% of the damage dealt."
+C expect rando_tooltip item_armorring_1_r2v0 contains "of Thorns | Reflects 16% of the damage taken."
+C expect rando_tooltip weapon_sword_longsword_unique == "Grimmaw's Fang | 20% chance on hit: causes bleeding. Heals 20% of the damage dealt."
+C expect rando_itemstats weapon_sword_longsword_unique contains "rarity=Legendary"
+C expect rando_affix weapon_sword_longsword_unique contains "Proc = bleed, Bonus = leech, BonusAmount = 20"
+
+# Attribute, crit and health bonuses apply on equip and come off with the item.
+C expect rando_armour contains "strength=5 dexterity=5 mind=5 crit=0.00 maxhealth=1040 "
+C give weapon_axe_woodSplitter_r2v0
+C give item_armorring_0_r2v0
+C give armor_chest_heavy_atlanter_r4v0
+C give weapon_axe_bronzeTusk_r4v0
+C give weapon_axe_bronzeTusk_r2v0
+C expect inventory bronzeTusk_r2v0 contains "weapon_axe_bronzeTusk_r2v0" timeout=10
+C expect equip weapon_axe_woodSplitter_r2v0 contains "equipped" timeout=10
+C expect rando_armour contains "strength=9 dexterity=5 " timeout=10
+C expect equip item_armorring_0_r2v0 contains "equipped" timeout=10
+C expect rando_armour contains "crit=0.04 " timeout=10
+C expect equip armor_chest_heavy_atlanter_r4v0 contains "equipped" timeout=10
+C expect rando_armour contains "maxhealth=1060 " timeout=10
+C expect equip weapon_axe_bronzeTusk_r4v0 contains "equipped" timeout=10
+C expect rando_armour contains "strength=5 dexterity=13 " timeout=10
+
+# Elite drops: a drop's value tier is within one of the elite's, and a strong legendary now and then drops a unique.
+C expect rando_pickdrop 2 0 200 == "uniques=0 rarities=2 tiers=0,1"
+C expect rando_pickdrop 4 0 200 == "uniques=0 rarities=4 tiers=0,1"
+C expect rando_pickdrop 4 4 400 contains " rarities=4 tiers=3,4"
+C expect rando_pickdrop 4 4 400 !contains "uniques=0 "
+
+# Leech heals the wielder on a hit.
+C hit me 20
+C expect equip weapon_axe_bronzeTusk_r2v0 contains "equipped" timeout=10
+C expect near $adder 1000 contains loaded timeout=20
+C expect rando_elite $adder == common
+set target $adder
+include swing.part
+include swing.part
+include swing.part
+C expect health $adder contains dead timeout=10
+C expect rando_procs contains "Player_Main(Clone)>Player_Main(Clone):leech:" timeout=10
+
+# The Hell frequency makes the common adder an elite.
+C load 5 0
+C wait world=1 timeout=240
+C expect state contains "rando=none" timeout=60
+C wait world=1 timeout=240
+C run rando_start 4242 default rarities=1 elite_frequency=3
+C expect state contains "rando=4242 " timeout=10
+C expect near $adder 1000 contains loaded timeout=20
+C expect rando_elite $adder contains "Rarity = 1," timeout=10
+
+# A thorned elite hurts whoever hits it. Its drop is gold for a rare of the lowest health tier.
+set seed 31
+include affix_run.part
+C give weapon_axe_bronzeTusk_r4v0
+C expect inventory bronzeTusk_r4v0 contains "weapon_axe_bronzeTusk_r4v0" timeout=10
+C expect equip weapon_axe_bronzeTusk_r4v0 contains "equipped" timeout=10
+set target $elite
+C expect near $elite 1000 contains loaded timeout=20
+C expect rando_elite $elite contains "Special = thorns,"
+C expect rando_elite $elite contains "} Brutal+Hardened+Thorned"
+include swing.part
+include swing.part
+include swing.part
+C expect health $elite contains dead timeout=10
+C expect rando_procs contains "Critter_Snake_Adder (Clone)>Player_Main(Clone):thorns:" timeout=10
+C expect rando_drop contains "gold=25 tier=0 items=" timeout=10
+
+# A volatile elite bursts with Blast when it dies.
+set seed 19
+include affix_run.part
+set target $elite
+C give weapon_axe_bronzeTusk_r4v0
+C expect inventory bronzeTusk_r4v0 contains "weapon_axe_bronzeTusk_r4v0" timeout=10
+C expect equip weapon_axe_bronzeTusk_r4v0 contains "equipped" timeout=10
+C expect near $elite 1000 contains loaded timeout=20
+C expect rando_elite $elite contains "Special = explosive,"
+C expect rando_elite $elite contains "} Swift+Volatile"
+include swing.part
+include swing.part
+include swing.part
+C expect health $elite contains dead timeout=10
+C expect rando_procs contains "Critter_Snake_Adder (Clone)>Player_Main(Clone):flow_blast:ability" timeout=10
+
+# A regenerating elite heals once the player fought it. Bare hands leave it alive however many blows land.
+set seed 29
+include affix_run.part
+set target $elite
+C expect near $elite 1000 contains loaded timeout=20
+C expect rando_elite $elite contains "Special = regenerating,"
+C unequip
+include swing.part
+include swing.part
+include swing.part
+C expect rando_rarities contains "engaged=1 " timeout=10
+C expect rando_procs contains "Critter_Snake_Adder (Clone)>Critter_Snake_Adder (Clone):regenerating:1" timeout=10
+C expect health $elite == 7/7 timeout=15
+
+# A summoner calls its pack once at its rarity, then never again.
+set seed 160
+include affix_run.part
+set target $bandit
+set side -25
+C tpnear $bandit -25 0
+C expect near $bandit 1000 contains loaded timeout=30
+C expect rando_elite $bandit contains "Special = summoner," timeout=30
+include swing.part
+include swing.part
+include swing.part
+include swing.part
+C expect rando_rarities contains "engaged=1 " timeout=10
+C expect rando_procs contains "Human_Bandit_RuinKasern_01 (Clone)>Player_Main(Clone):flow_conjure_pack:ability" timeout=30
+C expect rando_rarities contains "engaged=0 " timeout=5
+C expect actors 300 contains "Ripper"
+
+# A vampiric elite heals on its hits, and a thorns ring hurts whoever hits the player.
+set seed 267
+include affix_run.part
+C give item_armorring_1_r2v0
+C expect inventory armorring_1_r2v0 contains "item_armorring_1_r2v0" timeout=10
+C expect equip item_armorring_1_r2v0 contains "equipped" timeout=10
+C tpnear $bandit -25 0
+C expect near $bandit 1000 contains loaded timeout=30
+C expect rando_elite $bandit contains "Special = vampiric," timeout=30
+include swing.part
+include swing.part
+include swing.part
+include swing.part
+C expect rando_procs contains "Human_Bandit_RuinKasern_01 (Clone)>Human_Bandit_RuinKasern_01 (Clone):vampiric:" timeout=60
+C expect rando_procs contains "Player_Main(Clone)>Human_Bandit_RuinKasern_01 (Clone):thorns:" timeout=60
+
+# A jailer roots its target now and then.
+set seed 97
+include affix_run.part
+C tpnear $bandit -25 0
+C expect near $bandit 1000 contains loaded timeout=30
+C expect rando_elite $bandit contains "Special = jailer," timeout=30
+include swing.part
+include swing.part
+include swing.part
+include swing.part
+C expect rando_procs contains "Human_Bandit_RuinKasern_01 (Clone)>Player_Main(Clone):flow_graspingRoots:ability" timeout=90
+
+# Packs and sets. Seed 258 makes Adder_20 a plain epic, and the common adder next to it its minion.
+set side 25
+set seed 258
+include affix_run.part
+C expect near $adder 1000 contains loaded timeout=20
+C expect rando_elite $adder contains "Leader = a48f735f-60d2-4ddc-a2c5-6614b8754fe5 } Minion+" timeout=10
+C expect health $adder == 7/7 timeout=10
+# The tooltip counts the pieces worn. Two give the first set bonus, three the second.
+C expect rando_tooltip weapon_axe_warAxe_set contains "(0/3 worn): Vorgath's Cleaver, Vorgath's Hide, Vorgath's Knuckle. 2 pieces: +6 Strength." timeout=10
+C give weapon_axe_warAxe_set
+C give armor_chest_bandit_T4_set
+C give item_trinket_boxer_set
+C expect inventory boxer_set contains "item_trinket_boxer_set" timeout=10
+C expect equip weapon_axe_warAxe_set contains "equipped" timeout=10
+C expect rando_sets == "worn=1,0,0 shown=1,0,0" timeout=10
+C expect rando_armour contains "strength=5 "
+C expect equip armor_chest_bandit_T4_set contains "equipped" timeout=10
+C expect rando_sets == "worn=2,0,0 shown=2,0,0" timeout=10
+C expect rando_armour contains "strength=11 "
+C expect equip item_trinket_boxer_set contains "equipped" timeout=10
+C expect rando_sets == "worn=3,0,0 shown=3,0,0" timeout=10
+C expect rando_tooltip weapon_axe_warAxe_set contains "Vorgath's Wrath (3/3 worn)"
+# The full set leeches, and the epic kill drops a piece of the next set.
+C hit me 30
+set target $elite
+include swing.part
+include swing.part
+include swing.part
+include swing.part
+include swing.part
+include swing.part
+C expect health $elite contains dead timeout=10
+C expect rando_procs contains "Player_Main(Clone)>Player_Main(Clone):leech:" timeout=10
+C expect rando_drop contains "gold=60 tier=0 items=" timeout=10
+C expect rando_drop contains "_set"
+C expect rando_drop !contains "warAxe_set"
+C expect rando_drop !contains "T4_set"
+C expect rando_drop !contains "boxer_set"
+C unequip
+C expect rando_sets == "worn=2,0,0 shown=2,0,0" timeout=10
+C expect rando_armour contains "strength=11 "
+# A minion is an uncommon elite: its gold is that of an uncommon.
+C expect equip weapon_axe_warAxe_set contains "equipped" timeout=10
+C expect rando_sets == "worn=3,0,0 shown=3,0,0" timeout=10
+set target $adder
+include swing.part
+include swing.part
+include swing.part
+C expect health $adder contains dead timeout=10
+C expect rando_drop contains "gold=10 tier=0" timeout=10
+
+# The other two sets, two pieces and then three. A piece replaces the one in its slot, and there are two trinket slots.
+C give weapon_dagger_silence_set
+C give armor_chest_tunic_noble_name_set
+C give item_trinket_doriansHeirloom_set
+C give weapon_bow_huntingBow_set
+C give armor_chest_leather_magielager_name_set
+C give item_trinket_pureDmg_set
+C expect inventory pureDmg_set contains "item_trinket_pureDmg_set" timeout=10
+C expect equip weapon_dagger_silence_set contains "equipped" timeout=10
+C expect equip armor_chest_tunic_noble_name_set contains "equipped" timeout=10
+C expect rando_sets == "worn=1,2,0 shown=1,2,0" timeout=10
+C expect rando_armour contains "strength=5 dexterity=11 mind=5 crit=0.00 "
+C expect equip item_trinket_doriansHeirloom_set contains "equipped" timeout=10
+C expect rando_sets == "worn=1,3,0 shown=1,3,0" timeout=10
+C expect rando_armour contains "dexterity=11 mind=5 crit=0.10 "
+C expect rando_tooltip weapon_dagger_silence_set contains "Nerith's Veil (3/3 worn)"
+C expect equip weapon_bow_huntingBow_set contains "equipped" timeout=10
+C expect equip armor_chest_leather_magielager_name_set contains "equipped" timeout=10
+C expect rando_sets == "worn=1,1,2 shown=1,1,2" timeout=10
+C expect rando_armour contains "dexterity=5 mind=11 crit=0.00 "
+C expect equip item_trinket_pureDmg_set contains "equipped" timeout=10
+C expect rando_sets contains ",3 shown=" timeout=10
+C expect rando_tooltip weapon_bow_huntingBow_set contains "The Hollow Grove (3/3 worn)"
+# The full Hollow Grove hurts whoever hits the player.
+C run heal
+C tpnear $bandit -25 0
+C expect near $bandit 1000 contains loaded timeout=30
+C expect rando_procs contains "Player_Main(Clone)>Human_Bandit_RuinKasern_01 (Clone):thorns:" timeout=60
+# Switching to the other weapon set and back takes the bow's set effects off and on, and the cached gear follows.
+C expect rando_gear == "leech=0 thorns=30 armour=0"
+C rando_weaponset
+C expect rando_sets contains ",2 shown=" timeout=10
+C expect rando_gear == "leech=0 thorns=0 armour=0"
+C rando_weaponset
+C expect rando_sets contains ",3 shown=" timeout=10
+C expect rando_gear == "leech=0 thorns=30 armour=0"
+
+# Set counts and bonuses come back with a save. The extra test health is not saved, which tells the reload happened.
+C tp -2132,-5262
+C save 66
+C load 5 66
+C wait world=1 timeout=240
+C expect state contains "rando=258 " timeout=60
+C expect rando_armour contains "mind=11 crit=0.00 maxhealth=40 " timeout=20
+C expect rando_sets contains ",3 shown=" timeout=10
+C expect rando_tooltip weapon_bow_huntingBow_set contains "The Hollow Grove (3/3 worn)"
+
+# A legendary's minions carry its name. Seed 22 makes Adder_20 the legendary Nerith the Undying.
+set seed 22
+include affix_run.part
+C expect near $adder 1000 contains loaded timeout=20
+C expect rando_label $adder == "Minion of Nerith the Undying / Minion, Brutal, Hardened, Swift" timeout=10
+C expect rando_label $elite contains "Nerith the Undying / "

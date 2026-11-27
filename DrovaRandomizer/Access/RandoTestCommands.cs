@@ -17,6 +17,7 @@ using Il2CppDrova.GUI;
 using Il2CppDrova.GUI.LearnGUI;
 using Il2CppDrova.InteractionSystem;
 using Il2CppDrova.Items;
+using Il2CppDrova.Items.Stats;
 using Il2CppDrova.Talent;
 using Il2CppDrova.Utilities.LazyLoading;
 using Il2CppInterop.Runtime;
@@ -115,14 +116,20 @@ namespace DrovaRandomizer.Access
             TestAgent.RegisterCommand("rando_proc", args =>
             {
                 string[] parts = args.Trim().Split(' ');
-                Rarities.RunProc(Player, FindLoaded(parts[0]).Actor, parts[1]);
+                EliteCombat.RunProc(Player, FindLoaded(parts[0]).Actor, parts[1]);
                 return parts[1];
             });
             // "rando_spell <spell item id>": what a proc of that spell does.
             TestAgent.RegisterCommand("rando_spell", id =>
             {
-                (Il2CppDrova.ABI.ABI_Ability? ability, Il2CppDrova.StatusEffects.StatusEffect? effect) = Rarities.GetSpellEffect(id.Trim());
+                (Il2CppDrova.ABI.ABI_Ability? ability, Il2CppDrova.StatusEffects.StatusEffect? effect) = EliteCombat.GetSpellEffect(id.Trim());
                 return ability != null ? "ability " + ability.name : effect != null ? "effect " + effect.name : "none";
+            });
+            // "rando_maxhealth <n>": n more maximum health at once, without a reward toast per point.
+            TestAgent.RegisterCommand("rando_maxhealth", amount =>
+            {
+                Player.GetHealth().AddRuntimeMaxHealth(int.Parse(amount.Trim(), CultureInfo.InvariantCulture));
+                return Player.GetHealth().MaxHealth.ToString(CultureInfo.InvariantCulture);
             });
             // "rando_grant <reward id> <n>": queues a reward n times, as a check would.
             TestAgent.RegisterCommand("rando_grant", args =>
@@ -135,25 +142,118 @@ namespace DrovaRandomizer.Access
             TestAgent.RegisterCommand("rando_tooltip", id =>
             {
                 Item item = ProviderAccess.ItemDatabase!.GetItemByReadableId(id.Trim());
+                // The controller reuses an open tooltip window, which only fits an item of the same kind.
+                if (GUIGameHandler.TryGet(out GUIGameHandler? gui) && gui != null)
+                {
+                    gui.GetToolTipController().HideToolTip();
+                }
                 Il2CppDrova.GUI.ToolTip.GUITooltipBuilder.BuildItemTooltip(item, true);
                 return item.GetLocalizedItemName() + " | " + item.GetLocalizedItemDescription();
             });
             // "rando_eliteseed <guid> <rarity> [<guid> <least rarity> [always]]": the first seed that rolls those spawners so,
-            // with "always" the second one bleeding its target on every hit.
+            // with "always" the second one poisoning its target on every hit.
             TestAgent.RegisterCommand("rando_eliteseed", args =>
             {
                 string[] parts = args.Trim().Split(' ');
+                EnemyAffix Roll(ulong seed, string guid) => Affixes.RollEnemy(seed, guid, Affixes.NormalFrequency);
                 for (ulong seed = 1; seed < 1000000; seed++)
                 {
-                    if (Affixes.RollEnemy(seed, parts[0]).Rarity == int.Parse(parts[1])
-                        && (parts.Length < 4 || Affixes.RollEnemy(seed, parts[2]).Rarity >= int.Parse(parts[3]))
-                        && (parts.Length < 5 || Affixes.RollEnemy(seed, parts[2]) is { Proc: Affixes.Bleed, ProcChance: 1f }))
+                    if (Roll(seed, parts[0]).Rarity == int.Parse(parts[1])
+                        && (parts.Length < 4 || Roll(seed, parts[2]).Rarity >= int.Parse(parts[3]))
+                        && (parts.Length < 5 || Roll(seed, parts[2]) is { Proc: Affixes.Poison, ProcChance: 1f }))
                     {
-                        return seed + " " + Affixes.RollEnemy(seed, parts[0]) + (parts.Length < 4 ? "" : " " + Affixes.RollEnemy(seed, parts[2]));
+                        return seed + " " + Roll(seed, parts[0]) + (parts.Length < 4 ? "" : " " + Roll(seed, parts[2]));
                     }
                 }
                 return "none";
             });
+            // "rando_specialseed <guid> <special> [rarity]": the first seed that gives that spawner the special, at that rarity if given.
+            TestAgent.RegisterCommand("rando_specialseed", args =>
+            {
+                string[] parts = args.Trim().Split(' ');
+                for (ulong seed = 1; seed < 1000000; seed++)
+                {
+                    EnemyAffix affix = Affixes.RollEnemy(seed, parts[0], Affixes.NormalFrequency);
+                    if (affix.Special == parts[1] && (parts.Length < 3 || affix.Rarity == int.Parse(parts[2])))
+                    {
+                        return seed + " " + affix;
+                    }
+                }
+                return "none";
+            });
+            // "rando_elite <spawner guid>": the loaded body's modifiers and trait words, or "common".
+            TestAgent.RegisterCommand("rando_elite", guid =>
+            {
+                Actor? body = FindLoaded(guid.Trim()).Actor;
+                return body != null && Rarities.TryGetElite(body, out EnemyAffix affix) ? affix + " " + string.Join("+", Affixes.Traits(affix)) : "common";
+            });
+            // "rando_label <spawner guid>": the label text the loaded elite gets once fought, lines joined by " / ".
+            TestAgent.RegisterCommand("rando_label", guid =>
+            {
+                Actor? body = FindLoaded(guid.Trim()).Actor;
+                return body != null && Rarities.TryGetElite(body, out EnemyAffix affix) ? EliteLabels.LabelText(body, affix).Replace("\n", " / ") : "common";
+            });
+            // "rando_affix <item id>": the modifiers of a variant or unique.
+            TestAgent.RegisterCommand("rando_affix", id => RarityItems.AffixOf(id.Trim())?.ToString() ?? "none");
+            // "rando_sets": per set the pieces the player wears and the count its tooltips show, as worn=a,b,c shown=a,b,c.
+            TestAgent.RegisterCommand("rando_sets", _ => RarityItems.SetState());
+            // "rando_gear": what the player's gear does in a fight, as the hit hook reads it.
+            TestAgent.RegisterCommand("rando_gear", _ =>
+            {
+                RarityItems.GearEffects gear = RarityItems.GearOf(Player);
+                return "leech=" + gear.SetLeech + " thorns=" + gear.SetThorns + " armour=" + gear.Armour.Length;
+            });
+            // "rando_weaponset": switches to the player's other weapon set as its button does, and answers the active one.
+            TestAgent.RegisterCommand("rando_weaponset", _ =>
+            {
+                Actor.EquipmentModule equipment = Player.GetEquipmentModule();
+                equipment.TrySelectEquipmentSet(equipment.ActiveSetIndex == 0 ? 1 : 0);
+                return equipment.ActiveSetIndex.ToString(CultureInfo.InvariantCulture);
+            });
+            // "rando_drop": the last elite drop as gold=N tier=N items=id+id.
+            TestAgent.RegisterCommand("rando_drop", _ => EliteDrops.LastDrop);
+            // "rando_pickdrop <rarity> <tier> <n>": n elite drop picks as "uniques=N rarities=r,r tiers=t,t".
+            TestAgent.RegisterCommand("rando_pickdrop", args =>
+            {
+                int[] parts = args.Trim().Split(' ').Select(int.Parse).ToArray();
+                List<Item> picks = Enumerable.Range(0, parts[2]).Select(_ => RarityItems.PickDrop(parts[0], parts[1])).OfType<Item>().ToList();
+                List<ItemAffix> affixes = picks.Select(item => RarityItems.AffixOf(item.ReadableId)).OfType<ItemAffix>().ToList();
+                return "uniques=" + picks.Count(item => item.ReadableId.EndsWith("_unique", StringComparison.Ordinal))
+                    + " rarities=" + string.Join(",", affixes.Select(affix => affix.Rarity).Distinct().OrderBy(value => value))
+                    + " tiers=" + string.Join(",", picks.Select(item => RarityItems.TierOf(item.ReadableId)).Distinct().OrderBy(value => value));
+            });
+            // "rando_procs": the last procs that ran as source>target:proc:what it did.
+            TestAgent.RegisterCommand("rando_procs", _ => string.Join(",", EliteCombat.ProcLog));
+            // "rando_armour": the player's armour and magic resistance.
+            TestAgent.RegisterCommand("rando_armour", _ =>
+            {
+                StatContainer stats = GlobalStatsSettings.GetStatContainer();
+                AttributeStats own = Player.GetStats();
+                return "armour=" + own.GetGenericStat(stats.PhysicalResistanceStat).GetIntValue()
+                    + " magic=" + own.GetGenericStat(stats.MagicalResistanceStat).GetIntValue()
+                    + " strength=" + own.GetGenericStat(stats.StrengthStat).GetIntValue()
+                    + " dexterity=" + own.GetGenericStat(stats.DexStat).GetIntValue()
+                    + " mind=" + own.GetGenericStat(stats.MindStat).GetIntValue()
+                    + " crit=" + own.GetGenericStat(stats.CritChanceStat).GetFloatValue().ToString("F2", CultureInfo.InvariantCulture)
+                    + " maxhealth=" + Player.GetHealth().MaxHealth + " ";
+            });
+            // "rando_worn": each of the player's slots with an item, as id:main category:in active set:proc:effects applied.
+            TestAgent.RegisterCommand("rando_worn", _ =>
+            {
+                List<string> worn = [];
+                Il2CppCollections.List<ActorEquipSlot> slots = Player.GetEquipmentModule().AllItemSlotsRef;
+                for (int i = 0; i < slots.Count; i++)
+                {
+                    Item? item = slots[i].GetItemOnSlot();
+                    if (item != null)
+                    {
+                        worn.Add(item.ReadableId + ":" + item.Category.MainCategory + ":" + slots[i].IsInActiveSet() + ":" + (RarityItems.AffixOf(item.ReadableId)?.Proc ?? "-") + ":" + slots[i]._hasActiveEffectsApplied);
+                    }
+                }
+                return string.Join(",", worn);
+            });
+            // "rando_elitehits": the last elite hits as weapon:proc:queued.
+            TestAgent.RegisterCommand("rando_elitehits", _ => string.Join(",", EliteCombat.EliteHitLog));
             // "rando_itemstats <item id>": tooltip base damage and armour of an item.
             TestAgent.RegisterCommand("rando_itemstats", id =>
             {
@@ -172,7 +272,7 @@ namespace DrovaRandomizer.Access
                 {
                     LazyActor? lazy = found.TryCast<LazyActor>();
                     Actor? body = lazy != null && lazy.gameObject.scene.IsValid() ? lazy.Actor : null;
-                    if (body == null || !body.IsInitialized || !Rarities.TryGetElite(body, out EnemyAffix affix))
+                    if (body == null || !body.IsInitialized || body.GetHealth() == null || body.GetHealth().IsDead || !Rarities.TryGetElite(body, out EnemyAffix affix))
                     {
                         continue;
                     }
@@ -191,7 +291,7 @@ namespace DrovaRandomizer.Access
                     elites.Add(lazy!.name + ":" + affix.Rarity + ":" + health.MaxHealth + "/" + health.BaseMaxHealth + ":xp" + body.GetStats().ExpOnDead
                         + ":gear=" + string.Join("+", gear));
                 }
-                return "lasthit=" + Rarities.LastHit.Replace(' ', '_') + " variants=" + Rarities.VariantCount + " elites=" + elites.Count + " unbuffed=" + unbuffed + " " + string.Join(",", elites);
+                return "lasthit=" + EliteCombat.LastHit.Replace(' ', '_') + " variants=" + RarityItems.VariantCount + " elites=" + elites.Count + " unbuffed=" + unbuffed + " labels=" + EliteLabels.LabelCount + " engaged=" + EliteCombat.EngagedCount + " " + string.Join(",", elites);
             });
             TestAgent.RegisterCommand("rando_placed", key => Randomizer.Active && Randomizer.Seed.Placement.TryGetValue(key.Trim(), out string? id) ? id : "none");
             TestAgent.RegisterCommand("rando_run", _ => Randomizer.RunKey);
